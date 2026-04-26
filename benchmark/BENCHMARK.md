@@ -229,22 +229,22 @@ numbers is at the top of this document.
 
 | library | ns/op | B/op | allocs/op | notes |
 |---|---:|---:|---:|---|
-| `werr` | 393 | 268 | 1 | asm PC capture, arena-pooled wrapper |
-| `errtrace` | 491 | 185 | 1 | arena-pooled wrap; no native message API, so msg-leaves go through `fmt.Errorf` |
-| `stdlib` | 1019 | 302 | 12 | no frame capture |
-| `goerrors` | 1417 | 1002 | 11 | `WrapPrefix` shares one stack across N prefixes |
-| `errorx` | 2018 | 1452 | 9 | `Decorate` shares one stack across N wrappers |
-| `xerrors` | 3180 | 417 | 13 | one `Frame` per wrap |
-| `werrold` | 3547 | 1905 | 18 | older werr release, eager file/line/func, no arena |
-| `tozd` | 4982 | 2073 | 19 | full stack per wrap |
-| `pkgerrors` | 5132 | 1841 | 19 | full stack per wrap |
-| `emperror` | 5330 | 770 | 19 | full stack (pkg/errors-style) |
-| `cockroachdb` | 5701 | 1886 | 20 | full stack per wrap |
-| `mdobak` | 5918 | 6457 | 13 | full stack per wrap |
-| `goplay` | 6205 | 3252 | 41 | full stack per wrap |
-| `palantir` | 8649 | 3653 | 50 | one frame + msg per layer; `errors.Is` short-circuits early (Propagate hides `Unwrap`) |
-| `eris` | 10227 | 5222 | 39 | full stack per wrap |
-| `oops` | 135286 | 40823 | 585 | full stack + rich context per layer |
+| `werr` | 365 | 266 | 1 | asm PC capture, arena-pooled wrapper |
+| `errtrace` | 468 | 185 | 1 | arena-pooled wrap; no native message API, so msg-leaves go through `fmt.Errorf` |
+| `stdlib` | 884 | 302 | 12 | no frame capture |
+| `goerrors` | 1257 | 1002 | 11 | `WrapPrefix` shares one stack across N prefixes |
+| `errorx` | 1680 | 1452 | 9 | `Decorate` shares one stack across N wrappers |
+| `xerrors` | 2979 | 417 | 13 | one `Frame` per wrap |
+| `werrold` | 3245 | 1894 | 18 | older werr release, eager file/line/func, no arena |
+| `tozd` | 4699 | 2073 | 19 | full stack per wrap |
+| `pkgerrors` | 4739 | 1841 | 19 | full stack per wrap |
+| `emperror` | 4750 | 770 | 19 | full stack (pkg/errors-style) |
+| `cockroachdb` | 5271 | 1886 | 20 | full stack per wrap |
+| `mdobak` | 5358 | 6457 | 13 | full stack per wrap |
+| `goplay` | 5947 | 3251 | 41 | full stack per wrap |
+| `palantir` | 8061 | 3441 | 50 | one frame + msg per layer; `errors.Is` short-circuits early (Propagate hides `Unwrap`) |
+| `eris` | 9703 | 5210 | 39 | full stack per wrap |
+| `oops` | 131332 | 39656 | 585 | full stack + rich context per layer |
 
 The two arena-pooled libraries (werr, errtrace) average 1 alloc/op
 because the wrapper itself is reused; the only allocation per iteration
@@ -254,8 +254,8 @@ proportionally to the number of wrap layers it captures.
 #### Memory per iteration
 
 Same scenario, ranked by `B/op` instead of `ns/op`. The two axes don't
-agree: `mdobak` allocates 25× more bytes per chain than werr at similar
-ns/op. The bar chart is at the top of this document.
+agree: `mdobak` sits in the mid-tier on time but allocates 24× more
+bytes per chain than werr. The bar chart is at the top of this document.
 
 ### slog rendering
 
@@ -266,9 +266,9 @@ attached error is a 15-deep wrap chain.
 
 | library | ns/op | B/op | allocs/op | notes |
 |---|---:|---:|---:|---|
-| `stdlib` | 501 | 0 | 0 | falls back to `Error()` (cached after first call) |
-| `werr` | 5316 | 1128 | 3 | structured group via `LogValuer` |
-| `oops` | 116040 | 142344 | 1110 | structured group + per-layer attributes |
+| `stdlib` | 479 | 0 | 0 | falls back to `Error()` (cached after first call) |
+| `werr` | 4838 | 1128 | 3 | structured group via `LogValuer` |
+| `oops` | 109769 | 140391 | 1110 | structured group + per-layer attributes |
 
 werr and oops both emit a structured group with per-frame info, which
 is the cost of having structured frames in JSON logs at all. stdlib
@@ -287,22 +287,22 @@ in RESULTS.txt next to the dynamic metric.
 
 | library | header bytes | live-B/err | notes |
 |---|---:|---:|---|
-| `errtrace` | 24 | 30 | arena-pooled, no message field |
+| `errtrace` | 24 | 27 | arena-pooled, no message field |
 | `stdlib` | 32 | 36 | |
 | `werr` | 40 | 40 | arena-pooled `*Error` |
 | `xerrors` | 56 | 66 | one `Frame` per wrap |
 | `emperror` | 24 | 96 | |
-| `werrold` | 72 | 155 | older werr release, eager file/line/func |
-| `palantir` | 80 | 312 | |
+| `werrold` | 72 | 162 | older werr release, eager file/line/func |
+| `palantir` | 80 | 172 | |
 | `pkgerrors` | 24 | 304 | full goroutine stack |
 | `cockroachdb` | 24 | 304 | full goroutine stack |
 | `tozd` | 56 | 328 | |
 | `goerrors` | 80 | 496 | |
-| `eris` | 48 | 670 | |
+| `eris` | 48 | 641 | |
 | `mdobak` | 40 | 1072 | |
 | `errorx` | 64 | 1120 | |
-| `oops` | 280 | 1205 | rich context |
-| `tracerr` | 40 | 1370 | full stack + source excerpts |
+| `oops` | 280 | 1303 | rich context |
+| `tracerr` | 40 | 1411 | full stack + source excerpts |
 
 Header bytes is the static struct size; live-B/err includes the
 struct, any captured frames, message buffers, and other auxiliary
