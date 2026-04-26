@@ -136,6 +136,34 @@ func TestWrap2(t *testing.T) {
 		require.Equal(t, "alice", v.name)
 		require.True(t, werr.IsWrap(err))
 	})
+
+	t.Run("forwards typed-nil pointer when err is non-nil", func(t *testing.T) {
+		t.Parallel()
+
+		type box struct{}
+
+		fn := func() (*box, error) { return nil, errors.New("leaf") }
+		v, err := werr.Wrap2(fn())
+
+		require.Nil(t, v, "typed-nil value must be forwarded as-is")
+		require.True(t, werr.IsWrap(err))
+	})
+}
+
+// Wrap3 must forward typed-nil/zero values verbatim alongside a non-nil
+// err — covers the case the original TestWrap3 does not exercise (it
+// forwards 100 / "ctx", not zero values).
+func TestWrap3_typedNilForwarded(t *testing.T) {
+	t.Parallel()
+
+	type box struct{}
+
+	fn := func() (*box, int, error) { return nil, 0, errors.New("leaf") }
+	a, b, err := werr.Wrap3(fn())
+
+	require.Nil(t, a)
+	require.Zero(t, b)
+	require.True(t, werr.IsWrap(err))
 }
 
 // Hammer the wrap path under -race so a future regression (e.g. a stray

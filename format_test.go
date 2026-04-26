@@ -161,6 +161,103 @@ func TestSetFormatter_concurrent(t *testing.T) {
 	wg.Wait()
 }
 
+// SetOneLineFormatter writes only _kind, leaving _formatter stale —
+// distinct write pattern from SetFormatter, so race it explicitly.
+func TestSetOneLineFormatter_concurrent(t *testing.T) {
+	t.Cleanup(SetPrettyFormatter)
+
+	const goroutines = 16
+
+	const iterations = 1000
+
+	custom := FormatFn(func(_ []Frame, leaf error) string { return "C:" + leaf.Error() })
+
+	var wg sync.WaitGroup
+
+	wg.Add(goroutines * 2)
+
+	for range goroutines {
+		go func() {
+			defer wg.Done()
+
+			for j := range iterations {
+				switch j % 3 {
+				case 0:
+					SetOneLineFormatter()
+				case 1:
+					SetFormatter(custom)
+				default:
+					SetPrettyFormatter()
+				}
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+
+			err := Wrap(errors.New("leaf"))
+			for range iterations {
+				_ = err.Error()
+			}
+		}()
+	}
+
+	wg.Wait()
+}
+
+// Inline render buffers in Error.Error / Pretty / OneLine are sized [16];
+// chains beyond that overflow to heap. Verify output stays correct.
+func TestRender_chainDeeperThan16(t *testing.T) {
+	t.Parallel()
+
+	const depth = 20
+
+	var err = errors.New("leaf")
+	for i := range depth {
+		err = Wrapf(err, "frame-%d", i)
+	}
+
+	t.Run("Error()", func(t *testing.T) {
+		t.Parallel()
+
+		out := err.Error()
+		require.Contains(t, out, "leaf")
+		require.Contains(t, out, "frame-0")
+		require.Contains(t, out, "frame-19")
+		require.Equal(t, depth, strings.Count(out, " --- at "))
+	})
+
+	t.Run("Pretty", func(t *testing.T) {
+		t.Parallel()
+
+		out := Pretty(err)
+		require.Contains(t, out, "leaf")
+		require.Contains(t, out, "frame-19")
+		require.Equal(t, depth, strings.Count(out, " --- at "))
+	})
+
+	t.Run("OneLine", func(t *testing.T) {
+		t.Parallel()
+
+		out := OneLine(err)
+		require.NotContains(t, out, "\n")
+		require.Contains(t, out, "leaf")
+		require.Contains(t, out, "frame-19")
+	})
+}
+
+// Empty leaf message must not produce a leading bare newline in
+// PrettyFormatter output (regression: errors.New("") wrapped by Wrap
+// previously rendered as "\n --- at ...").
+func TestPrettyFormatter_emptyLeaf(t *testing.T) {
+	t.Parallel()
+
+	out := Pretty(Wrap(errors.New("")))
+	require.False(t, strings.HasPrefix(out, "\n"),
+		"empty heading must not produce a leading newline; got %q", out)
+	require.Contains(t, out, " --- at ")
+}
+
 func TestHelpers(t *testing.T) {
 	t.Parallel()
 

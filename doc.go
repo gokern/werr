@@ -17,6 +17,8 @@
 //   - [Walk] iterates werr-frames outermost to innermost; [Frame] exposes the
 //     metadata for each frame. [Frames] is a range-over-func variant for the
 //     callsites that don't need [Walk]'s leaf return value.
+//   - [Callers] returns wrap-site PCs innermost-first (opposite to [Walk]),
+//     ready to feed into runtime.CallersFrames or APM SDKs.
 //   - From a `*werr.Error` directly: [Error.Message], [Error.FuncName],
 //     [Error.File], [Error.Line], [Error.PC].
 //

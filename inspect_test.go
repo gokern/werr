@@ -123,6 +123,16 @@ func TestStrip(t *testing.T) {
 		t.Parallel()
 		require.ErrorIs(t, werr.Strip(werr.Wrap(io.EOF)), io.EOF)
 	})
+
+	t.Run("fmt.Errorf-wrapped werr at head returned unchanged", func(t *testing.T) {
+		t.Parallel()
+
+		leaf := errors.New("leaf")
+		head := fmt.Errorf("fmt: %w", werr.Wrap(leaf))
+
+		require.Same(t, head, werr.Strip(head),
+			"non-werr head must be returned unchanged, not unwrapped to the inner werr")
+	})
 }
 
 func TestStripAll(t *testing.T) {
@@ -161,6 +171,16 @@ func TestStripAll(t *testing.T) {
 			werr.StripAll(err),
 			"StripAll must stop at the first non-werr wrapper",
 		)
+	})
+
+	t.Run("fmt.Errorf-wrapped werr at head returned unchanged", func(t *testing.T) {
+		t.Parallel()
+
+		leaf := errors.New("leaf")
+		head := fmt.Errorf("fmt: %w", werr.Wrap(leaf))
+
+		require.Same(t, head, werr.StripAll(head),
+			"non-werr head must be returned unchanged, not unwrapped past the fmt layer")
 	})
 
 	t.Run("result is never a werr.Error", func(t *testing.T) {

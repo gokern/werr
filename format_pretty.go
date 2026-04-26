@@ -9,7 +9,9 @@ import (
 )
 
 // PrettyFormatter renders the chain as a multi-line, Java-exception-style
-// stack trace:
+// stack trace. Frame format is "<pkg>/<basename>:<line> (<func>)" where
+// pkg is the full import path from runtime.FuncForPC and basename is
+// path.Base of the source file (full file path is kept for slog only):
 //
 //	{outer message}
 //	 --- at github.com/foo/bar/file.go:42 (FuncName)
@@ -28,6 +30,8 @@ import (
 //	werr.SetFormatter(func(frames []werr.Frame, leaf error) string {
 //	    return "[APP] " + werr.PrettyFormatter(frames, leaf)
 //	})
+//
+//nolint:cyclop // tight inline rendering with conservative branching keeps allocations down.
 func PrettyFormatter(frames []Frame, leaf error) string {
 	if len(frames) == 0 {
 		if leaf == nil {
@@ -53,8 +57,11 @@ func PrettyFormatter(frames []Frame, leaf error) string {
 
 	sb.Grow(prettyEstimate(frames, heading, leafMsg, headingFromLeaf))
 
-	sb.WriteString(heading)
-	sb.WriteByte('\n')
+	// Skip empty heading to avoid a leading bare newline (e.g. errors.New("")).
+	if heading != "" {
+		sb.WriteString(heading)
+		sb.WriteByte('\n')
+	}
 
 	currentMsg := frames[0].Msg
 	for _, frame := range frames {
