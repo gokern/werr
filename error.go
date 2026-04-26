@@ -160,10 +160,16 @@ func (e *Error) StackTrace() []uintptr {
 // errorCustom is the slow path for user-installed formatters. Splitting it
 // out keeps the indirect FormatFn call out of [Error.Error] so the on-stack
 // frame buffer stays on the stack on the fast path.
-func errorCustom(e *Error) string {
-	var frames []Frame
+func errorCustom(we *Error) string {
+	// Inline [16]Frame buffer collapses the append cap-grow cascade
+	// (1→2→4→8→16) into a single heap allocation. The backing array still
+	// escapes through the indirect FormatFn call below, since escape
+	// analysis cannot see past the function-pointer load, so this is one
+	// alloc instead of many, not zero-alloc.
+	var stack [16]Frame
 
-	cur := error(e)
+	frames := stack[:0]
+	cur := error(we)
 
 	for {
 		we, ok := cur.(*Error) //nolint:errorlint

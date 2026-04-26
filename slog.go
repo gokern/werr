@@ -35,11 +35,11 @@ func (e *Error) LogValue() slog.Value {
 		Msg  string `json:"msg"`
 	}
 
-	// Inline the chain walk with a stack-allocated buffer. A closure-based
-	// Walk would force the slice to grow incrementally with multiple heap
-	// reallocations; the inline [16] keeps collection in one shot for
-	// chains up to that depth. The slice itself still escapes once it is
-	// passed to slog.Any below — that is unavoidable through the slog API.
+	// Inline the chain walk with a stack-sized buffer. The slice always
+	// escapes when passed to slog.Any below (slog handlers serialise
+	// "any"-kind attributes through json.Marshal), so the backing array
+	// ends up on the heap regardless. The [16] cap saves the intermediate
+	// cap-grow reallocations during the walk, nothing more.
 	var stack [16]slogFrame
 
 	frames := stack[:0]

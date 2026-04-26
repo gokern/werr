@@ -17,6 +17,8 @@ package werr
 // walk: we break before dereferencing. Real wrap chains never produce
 // typed-nil interior links, but reflection callers like sentry-go can
 // hand us a typed-nil receiver, and the same check covers both.
+//
+//nolint:cyclop // two-pass walk with bounds-guard; extracting a helper would split the chain logic with no real benefit.
 func Callers(err error) []uintptr {
 	// Two-pass on purpose: count first to size the slice exactly, then
 	// fill from the tail so outermost-first chain order flips into
@@ -55,7 +57,7 @@ func Callers(err error) []uintptr {
 			break
 		}
 
-		if we.pc != 0 {
+		if we.pc != 0 && i >= 0 {
 			pcs[i] = we.pc
 			i--
 		}
