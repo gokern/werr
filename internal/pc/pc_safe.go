@@ -1,0 +1,32 @@
+//go:build werrsafe || !(amd64 || arm64)
+
+package pc
+
+import "runtime"
+
+// Caller returns the program counter of the caller of Caller's caller.
+//
+// Portable fallback delegating to runtime.Callers. The asm fast path
+// (pc_unsafe.go + pc_<arch>.s) is used on amd64 and arm64 when the
+// werrsafe build tag is not set.
+//
+//go:noinline keeps the skip count below correct: if Caller were inlined
+// into werr.Wrap, runtime.Callers(3, …) would skip one frame too many
+// and capture the user's caller instead of the user. The asm path is
+// structurally non-inlinable, so this matters only on the safe path.
+func Caller() uintptr {
+	// Skip 3: runtime.Callers, pc.Caller, pc.Caller's caller (e.g. werr.Wrap).
+	// Frame 3 is the user code we want to attribute the wrap to.
+	//
+	// Note: when pc.Caller is invoked from a deferred function (the Recover
+	// path), frame 3 lands on the defer-dispatch site rather than the user's
+	// `defer werr.Recover(&err)` line. This ambiguity is acknowledged by the
+	// absence of a Recover-specific call-site test (see the comment above
+	// TestPanicToError_capturesCallerLine) and applies equally to the asm
+	// fast path.
+	var pcs [1]uintptr
+	if n := runtime.Callers(3, pcs[:]); n == 0 {
+		return 0
+	}
+	return pcs[0]
+}

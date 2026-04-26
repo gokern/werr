@@ -1,0 +1,83 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+formatters:
+  enable:
+    - gci
+    - golines
+    - gofmt
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule
+    gofmt:
+      rewrite-rules:
+        - pattern: "interface{}"
+          replacement: "any"
+        - pattern: "a[b:len(a)]"
+          replacement: "a[b:]"
+
+
+linters:
+  default: all
+  disable:
+    - wsl # Deprecated, replaced by wsl_v5.
+    - err113
+    # White-box tests are intentional (see CLAUDE.md "Test layout"): black-box
+    # tests live in *_test.go with package werr_test, white-box tests share the
+    # package to exercise unexported helpers.
+    - testpackage
+    # Many tests deliberately mutate global state (formatter, allocation
+    # baselines, PC capture) and cannot be run in parallel safely.
+    - paralleltest
+  settings:
+    depguard:
+      rules:
+        main:
+          allow:
+            - $gostd
+            - github.com/gokern/werr
+            - github.com/stretchr/testify
+    dogsled:
+      # runtime.Caller returns four values; tests legitimately discard three.
+      max-blank-identifiers: 3
+    lll:
+      # Default 120 is too tight for godoc example lines (which cannot be wrapped
+      # without breaking the rendered docs).
+      line-length: 130
+    varnamelen:
+      ignore-names:
+        - fn
+        - v
+        - tc # test case
+        - i
+        - n  # length / count
+        - a  # arena, attr
+        - h  # handler
+        - p  # pointer
+        - p1
+        - p2
+      ignore-decls:
+        - wg sync.WaitGroup
+        - w werr.Error
+        - w *werr.Error
+        - mu sync.Mutex
+        - sb *strings.Builder
+        - sb strings.Builder
+        - we Error
+        - we *Error
+        - a arena.box
+        - f werr.Frame
+        - f Frame
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - exhaustruct
+          - funlen          # table-driven tests legitimately grow large
+          - forcetypeassert # tests know the concrete shape they constructed
+          - gosec           # G602 etc. — tests deliberately panic / index OOB

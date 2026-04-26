@@ -1,0 +1,166 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      - name: Download modules
+        run: go mod download
+
+      - name: Verify modules
+        run: go mod verify
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test with race and coverage
+        run: go test -race -covermode=atomic -coverprofile=coverage.out ./...
+
+      - name: Run demo (smoke test)
+        if: matrix.os == 'ubuntu-latest'
+        run: go run ./_examples/demo > /dev/null
+
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage.out
+          if-no-files-found: error
+
+  test-werrsafe:
+    name: Test (werrsafe fallback)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      # The asm PC-capture path (pc_amd64.s / pc_arm64.s) is exercised by the
+      # default matrix above. The werrsafe build tag forces the runtime.Callers
+      # fallback in internal/pc; this job ensures it stays semantically
+      # equivalent.
+      - name: Test with race (werrsafe tag)
+        run: go test -race -tags werrsafe ./...
+
+  fuzz:
+    name: Fuzz (${{ matrix.target.pkg }} ${{ matrix.target.fn }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - { pkg: ".",                   fn: "FuzzPretty"  }
+          - { pkg: ".",                   fn: "FuzzOneLine" }
+          - { pkg: "./internal/funcname", fn: "FuzzSplit"   }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      # The saved corpus under testdata/fuzz/ is replayed by the regular test
+      # job; this run actively explores new inputs for 30s per target.
+      - name: Fuzz ${{ matrix.target.fn }}
+        run: go test -run=^$ -fuzz=^${{ matrix.target.fn }}$ -fuzztime=30s ${{ matrix.target.pkg }}
+
+      # Go writes a failing input to testdata/fuzz/<FuzzName>/<hash> when it
+      # finds a crash. Capture that file as an artifact so the developer can
+      # commit it as a regression seed without re-fuzzing locally.
+      - name: Upload fuzz crash seed
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fuzz-crash-${{ matrix.target.fn }}
+          path: ${{ matrix.target.pkg }}/testdata/fuzz/${{ matrix.target.fn }}/
+          if-no-files-found: ignore
+
+  benchmark-build:
+    name: Benchmark module compiles
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      # benchmark/ lives in its own go.mod to keep cross-library deps out of
+      # the root module. We don't run benchmarks here (CI runners are too
+      # noisy for meaningful numbers), but we do guarantee the module still
+      # builds — so an API change in werr that breaks the benchmark suite is
+      # caught at PR time, not the next time someone runs `make bench`.
+      - name: Build benchmark module
+        working-directory: benchmark
+        run: |
+          go build ./...
+          go vet ./...
+
+  interop-sentry:
+    name: Interop module (sentry-go)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      # interop/sentry pins sentry-go and replaces github.com/gokern/werr
+      # with the working tree, so this job verifies the duck-typed
+      # StackTrace() contract used by sentry.ExtractStacktrace at PR time.
+      # Catches API renames or signature changes that would break the protocol.
+      - name: Test interop/sentry
+        working-directory: interop/sentry
+        run: |
+          go build ./...
+          go vet ./...
+          go test -race ./...
