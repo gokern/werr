@@ -5,7 +5,7 @@ go 1.26
 require (
 	braces.dev/errtrace v0.4.0
 	emperror.dev/errors v0.8.1
-	github.com/cockroachdb/errors v1.12.0
+	github.com/cockroachdb/errors v1.13.0
 	github.com/go-errors/errors v1.5.1
 	github.com/go-playground/errors/v5 v5.4.0
 	github.com/gokern/werr v0.0.0-00010101000000-000000000000
@@ -25,7 +25,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
 	github.com/cockroachdb/redact v1.1.8 // indirect
-	github.com/getsentry/sentry-go v0.33.0 // indirect
+	github.com/getsentry/sentry-go v0.46.0 // indirect
 	github.com/go-playground/pkg/v5 v5.31.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
