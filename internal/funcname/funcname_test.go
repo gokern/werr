@@ -7,6 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// testPkg is the sample module path shared by every module-scoped case below.
+const testPkg = "github.com/foo/bar"
+
 func TestSplit(t *testing.T) {
 	t.Parallel()
 
@@ -19,20 +22,20 @@ func TestSplit(t *testing.T) {
 		{name: "stdlib top-level", in: "main.main", wantPkg: "main", wantFn: "main"},
 		{
 			name:    "module func",
-			in:      "github.com/foo/bar.Func",
-			wantPkg: "github.com/foo/bar",
+			in:      testPkg + ".Func",
+			wantPkg: testPkg,
 			wantFn:  "Func",
 		},
 		{
 			name:    "pointer receiver method",
-			in:      "github.com/foo/bar.(*Type).Method",
-			wantPkg: "github.com/foo/bar",
+			in:      testPkg + ".(*Type).Method",
+			wantPkg: testPkg,
 			wantFn:  "(*Type).Method",
 		},
 		{
 			name:    "value receiver method",
-			in:      "github.com/foo/bar.Type.Method",
-			wantPkg: "github.com/foo/bar",
+			in:      testPkg + ".Type.Method",
+			wantPkg: testPkg,
 			wantFn:  "Type.Method",
 		},
 		{name: "no dot", in: "noPackage", wantPkg: "", wantFn: "noPackage"},
