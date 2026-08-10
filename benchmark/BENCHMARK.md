@@ -126,8 +126,8 @@ The full suite is light enough to reproduce on a developer laptop. From
 the repo root:
 
 ```sh
-make bench-compare    # ~90 sec — writes benchmark/RESULTS.txt
-make bench-charts     # regenerates benchmark/charts/*.svg from RESULTS.txt
+make bench-full       # ~90 sec — writes benchmark/RESULTS.txt and
+                      # regenerates benchmark/charts/*.svg from it
 ```
 
 For finer control:
@@ -215,7 +215,7 @@ RESULTS.txt` directly.
 
 ## Results
 
-Snapshot of medians from one `make bench-compare` run (`-benchtime 1s
+Snapshot of medians from one `make bench-full` run (`-benchtime 1s
 -cpu 1 -count 3`) on the environment above.
 
 ### Realistic — full request lifecycle
