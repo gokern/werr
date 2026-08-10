@@ -16,8 +16,13 @@ type Scenario struct {
 }
 
 // scenarios is the full catalogue of charts the binary knows how to draw.
-// Cutoffs are picked so the linear scale shows ~90% of libraries with
-// genuine outliers (oops) pushed below the off-scale divider.
+// Cutoffs bound the linear scale so that one pathological library cannot
+// squash every other bar into invisibility; anything above a cutoff is drawn
+// off-scale below a divider. They are upper guards, not promises: when no
+// library exceeds one, Render simply scales to the largest real value and
+// draws no divider at all. As of the current results only Footprint still
+// overflows — oops used to blow out the other three and stopped doing so in
+// v1.23, so those cutoffs now sit unused above the data.
 //
 //nolint:gochecknoglobals
 var scenarios = []Scenario{
@@ -27,7 +32,7 @@ var scenarios = []Scenario{
 		Pick:       func(s Sample) float64 { return s.NsPerOp },
 		Title:      "Realistic — full request lifecycle (time)",
 		Subtitle:   "ns/op (linear, lower is better) — werr highlighted",
-		Cutoff:     25_000, // 25 µs; only oops overflows in current results
+		Cutoff:     25_000, // 25 µs; nothing overflows today (slowest is oops at ~12 µs)
 		Formatter:  TimeFormatter,
 		OverflowID: "ovf-time",
 	},
@@ -37,7 +42,7 @@ var scenarios = []Scenario{
 		Pick:       func(s Sample) float64 { return s.BytesPerOp },
 		Title:      "Realistic — memory per iteration",
 		Subtitle:   "B/op (linear, lower is better) — werr highlighted",
-		Cutoff:     20_000, // 20 KB; mdobak (16 KB) stays in scope, oops (73 KB) overflows
+		Cutoff:     20_000, // 20 KB; nothing overflows today (heaviest is mdobak at ~6.5 KB)
 		Formatter:  BytesFormatter,
 		OverflowID: "ovf-bytes",
 	},
@@ -47,7 +52,7 @@ var scenarios = []Scenario{
 		Pick:       func(s Sample) float64 { return s.NsPerOp },
 		Title:      "slog.JSONHandler — structured logging cost",
 		Subtitle:   "ns/op (linear, lower is better) — werr highlighted",
-		Cutoff:     20_000, // 20 µs; oops (113 µs) overflows
+		Cutoff:     20_000, // 20 µs; nothing overflows today (slowest is oops at ~9 µs)
 		Formatter:  TimeFormatter,
 		OverflowID: "ovf-slog",
 	},

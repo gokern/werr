@@ -6,13 +6,14 @@ its own idiomatic API. The question the suite is built to answer: in a
 typical request lifecycle, how much does each library cost in time and
 in bytes?
 
-![Realistic benchmark — time per iteration, werr highlighted, oops shown off-scale](charts/realistic.svg)
+![Realistic benchmark — time per iteration, werr highlighted](charts/realistic.svg)
 
-![Realistic benchmark — memory per iteration, werr highlighted, oops shown off-scale](charts/realistic_bytes.svg)
+![Realistic benchmark — memory per iteration, werr highlighted](charts/realistic_bytes.svg)
 
-Off-scale bars (muted gray, hatched) are libraries past the chart's
-linear cutoff. The parenthesised number is the actual value. Full
-tables and methodology below.
+Where a chart shows off-scale bars (muted gray, hatched), those are
+libraries past its linear cutoff, and the parenthesised number is the
+actual value. In the current results only the footprint chart has any;
+the two above fit entirely on scale. Full tables and methodology below.
 
 ## How to read the tables
 
@@ -126,8 +127,8 @@ The full suite is light enough to reproduce on a developer laptop. From
 the repo root:
 
 ```sh
-make bench-compare    # ~90 sec — writes benchmark/RESULTS.txt
-make bench-charts     # regenerates benchmark/charts/*.svg from RESULTS.txt
+make bench-full       # ~90 sec — writes benchmark/RESULTS.txt and
+                      # regenerates benchmark/charts/*.svg from it
 ```
 
 For finer control:
@@ -157,15 +158,21 @@ section was produced on:
 
 | key | value |
 |---|---|
-| Go version | `go1.26.2` |
+| Go version | `go1.26.5` |
 | GOOS / GOARCH | `darwin / arm64` |
 | CPU model | `Apple M1` |
 | Cores used | `1` (`-cpu 1`) |
 | Benchtime | `1s` |
 | Count | `3` |
+| Library versions | pinned in `benchmark/go.mod` |
 
 The suite is light enough that `-benchtime 1s -count 3` is statistically
 sufficient and finishes in ~90 sec.
+
+The competing libraries are ordinary module dependencies, so a
+dependency bump moves the numbers below without touching a line of
+bench code. Treat `make bench-full` plus a refresh of the Results
+tables as part of merging any `benchmark/go.mod` update.
 
 ## Caveats
 
@@ -215,7 +222,7 @@ RESULTS.txt` directly.
 
 ## Results
 
-Snapshot of medians from one `make bench-compare` run (`-benchtime 1s
+Snapshot of medians from one `make bench-full` run (`-benchtime 1s
 -cpu 1 -count 3`) on the environment above.
 
 ### Realistic — full request lifecycle
@@ -229,22 +236,22 @@ numbers is at the top of this document.
 
 | library | ns/op | B/op | allocs/op | notes |
 |---|---:|---:|---:|---|
-| `werr` | 365 | 266 | 1 | asm PC capture, arena-pooled wrapper |
-| `errtrace` | 468 | 185 | 1 | arena-pooled wrap; no native message API, so msg-leaves go through `fmt.Errorf` |
-| `stdlib` | 884 | 302 | 12 | no frame capture |
-| `goerrors` | 1257 | 1002 | 11 | `WrapPrefix` shares one stack across N prefixes |
-| `errorx` | 1680 | 1452 | 9 | `Decorate` shares one stack across N wrappers |
-| `xerrors` | 2979 | 417 | 13 | one `Frame` per wrap |
-| `werrold` | 3245 | 1894 | 18 | older werr release, eager file/line/func, no arena |
-| `tozd` | 4699 | 2073 | 19 | full stack per wrap |
-| `pkgerrors` | 4739 | 1841 | 19 | full stack per wrap |
-| `emperror` | 4750 | 770 | 19 | full stack (pkg/errors-style) |
-| `cockroachdb` | 5271 | 1886 | 20 | full stack per wrap |
-| `mdobak` | 5358 | 6457 | 13 | full stack per wrap |
-| `goplay` | 5947 | 3251 | 41 | full stack per wrap |
-| `palantir` | 8061 | 3441 | 50 | one frame + msg per layer; `errors.Is` short-circuits early (Propagate hides `Unwrap`) |
-| `eris` | 9703 | 5210 | 39 | full stack per wrap |
-| `oops` | 131332 | 39656 | 585 | full stack + rich context per layer |
+| `werr` | 363 | 266 | 1 | asm PC capture, arena-pooled wrapper |
+| `errtrace` | 463 | 185 | 1 | arena-pooled wrap; no native message API, so msg-leaves go through `fmt.Errorf` |
+| `stdlib` | 873 | 302 | 12 | no frame capture |
+| `goerrors` | 1219 | 1002 | 11 | `WrapPrefix` shares one stack across N prefixes |
+| `errorx` | 1629 | 1452 | 9 | `Decorate` shares one stack across N wrappers |
+| `xerrors` | 2877 | 417 | 13 | one `Frame` per wrap |
+| `werrold` | 3171 | 1894 | 18 | older werr release, eager file/line/func, no arena |
+| `palantir` | 3846 | 2193 | 26 | one frame + msg per layer; `errors.Is` short-circuits early (Propagate hides `Unwrap`) |
+| `emperror` | 4555 | 770 | 19 | full stack (pkg/errors-style) |
+| `pkgerrors` | 4576 | 1841 | 19 | full stack per wrap |
+| `tozd` | 4576 | 2073 | 19 | full stack per wrap |
+| `cockroachdb` | 5014 | 1886 | 20 | full stack per wrap |
+| `mdobak` | 5265 | 6457 | 13 | full stack per wrap |
+| `goplay` | 5830 | 3251 | 41 | full stack per wrap |
+| `eris` | 9351 | 5210 | 38 | full stack per wrap |
+| `oops` | 11804 | 7836 | 67 | full stack + rich context per layer |
 
 The two arena-pooled libraries (werr, errtrace) average 1 alloc/op
 because the wrapper itself is reused; the only allocation per iteration
@@ -266,9 +273,9 @@ attached error is a 15-deep wrap chain.
 
 | library | ns/op | B/op | allocs/op | notes |
 |---|---:|---:|---:|---|
-| `stdlib` | 479 | 0 | 0 | falls back to `Error()` (cached after first call) |
-| `werr` | 4838 | 1128 | 3 | structured group via `LogValuer` |
-| `oops` | 109769 | 140391 | 1110 | structured group + per-layer attributes |
+| `stdlib` | 472 | 0 | 0 | falls back to `Error()` (cached after first call) |
+| `werr` | 4800 | 1128 | 3 | structured group via `LogValuer` |
+| `oops` | 8970 | 9393 | 64 | structured group + per-layer attributes |
 
 werr and oops both emit a structured group with per-frame info, which
 is the cost of having structured frames in JSON logs at all. stdlib
@@ -292,17 +299,17 @@ in RESULTS.txt next to the dynamic metric.
 | `werr` | 40 | 40 | arena-pooled `*Error` |
 | `xerrors` | 56 | 66 | one `Frame` per wrap |
 | `emperror` | 24 | 96 | |
-| `werrold` | 72 | 162 | older werr release, eager file/line/func |
-| `palantir` | 80 | 172 | |
+| `werrold` | 72 | 153 | older werr release, eager file/line/func |
+| `palantir` | 80 | 153 | |
 | `pkgerrors` | 24 | 304 | full goroutine stack |
 | `cockroachdb` | 24 | 304 | full goroutine stack |
 | `tozd` | 56 | 328 | |
 | `goerrors` | 80 | 496 | |
-| `eris` | 48 | 641 | |
+| `eris` | 48 | 699 | |
 | `mdobak` | 40 | 1072 | |
+| `oops` | 312 | 1090 | rich context |
 | `errorx` | 64 | 1120 | |
-| `oops` | 280 | 1303 | rich context |
-| `tracerr` | 40 | 1411 | full stack + source excerpts |
+| `tracerr` | 40 | 1364 | full stack + source excerpts |
 
 Header bytes is the static struct size; live-B/err includes the
 struct, any captured frames, message buffers, and other auxiliary
