@@ -2,112 +2,112 @@ goos: darwin
 goarch: arm64
 pkg: github.com/gokern/werr/benchmark
 cpu: Apple M1
-BenchmarkFootprint_stdlib      	11877286	       102.6 ns/op	        32.00 header-B	        36.00 live-B/err	      36 B/op	       2 allocs/op
-BenchmarkFootprint_stdlib      	12308906	       103.1 ns/op	        32.00 header-B	        36.00 live-B/err	      36 B/op	       2 allocs/op
-BenchmarkFootprint_stdlib      	11435926	       102.5 ns/op	        32.00 header-B	        36.00 live-B/err	      36 B/op	       2 allocs/op
-BenchmarkFootprint_xerrors     	 2922754	       416.4 ns/op	        56.00 header-B	        65.96 live-B/err	      68 B/op	       2 allocs/op
-BenchmarkFootprint_xerrors     	 2854322	       422.1 ns/op	        56.00 header-B	        65.64 live-B/err	      68 B/op	       2 allocs/op
-BenchmarkFootprint_xerrors     	 2831090	       422.5 ns/op	        56.00 header-B	        65.67 live-B/err	      68 B/op	       2 allocs/op
-BenchmarkFootprint_werr        	43177116	        32.67 ns/op	        40.00 header-B	        40.02 live-B/err	      40 B/op	       0 allocs/op
-BenchmarkFootprint_werr        	38253601	        30.31 ns/op	        40.00 header-B	        40.02 live-B/err	      40 B/op	       0 allocs/op
-BenchmarkFootprint_werr        	44067490	        29.23 ns/op	        40.00 header-B	        40.02 live-B/err	      40 B/op	       0 allocs/op
-BenchmarkFootprint_werrold     	 2529422	       458.4 ns/op	        72.00 header-B	       163.4 live-B/err	     328 B/op	       3 allocs/op
-BenchmarkFootprint_werrold     	 2571187	       452.8 ns/op	        72.00 header-B	       158.8 live-B/err	     328 B/op	       3 allocs/op
-BenchmarkFootprint_werrold     	 2533926	       467.4 ns/op	        72.00 header-B	       161.5 live-B/err	     328 B/op	       3 allocs/op
-BenchmarkFootprint_pkgerrors   	 2606286	       468.5 ns/op	        24.00 header-B	       304.0 live-B/err	     304 B/op	       3 allocs/op
-BenchmarkFootprint_pkgerrors   	 2769591	       467.2 ns/op	        24.00 header-B	       304.0 live-B/err	     304 B/op	       3 allocs/op
-BenchmarkFootprint_pkgerrors   	 2652963	       460.9 ns/op	        24.00 header-B	       304.0 live-B/err	     304 B/op	       3 allocs/op
-BenchmarkFootprint_cockroachdb 	 2130524	       581.3 ns/op	        24.00 header-B	       304.0 live-B/err	     304 B/op	       3 allocs/op
-BenchmarkFootprint_cockroachdb 	 2107165	       585.9 ns/op	        24.00 header-B	       304.0 live-B/err	     304 B/op	       3 allocs/op
-BenchmarkFootprint_cockroachdb 	 2114776	       585.7 ns/op	        24.00 header-B	       304.0 live-B/err	     304 B/op	       3 allocs/op
-BenchmarkFootprint_emperror    	 2107143	       555.0 ns/op	        24.00 header-B	        96.00 live-B/err	      96 B/op	       3 allocs/op
-BenchmarkFootprint_emperror    	 2113734	       554.0 ns/op	        24.00 header-B	        96.00 live-B/err	      96 B/op	       3 allocs/op
-BenchmarkFootprint_emperror    	 2184726	       548.4 ns/op	        24.00 header-B	        96.00 live-B/err	      96 B/op	       3 allocs/op
-BenchmarkFootprint_errorx      	 1000000	      1071 ns/op	        64.00 header-B	      1120 live-B/err	    1120 B/op	       3 allocs/op
-BenchmarkFootprint_errorx      	 1216390	      1035 ns/op	        64.00 header-B	      1120 live-B/err	    1120 B/op	       3 allocs/op
-BenchmarkFootprint_errorx      	 1216545	      1034 ns/op	        64.00 header-B	      1120 live-B/err	    1120 B/op	       3 allocs/op
-BenchmarkFootprint_goerrors    	 2675869	       493.2 ns/op	        80.00 header-B	       496.0 live-B/err	     496 B/op	       2 allocs/op
-BenchmarkFootprint_goerrors    	 2676171	       497.6 ns/op	        80.00 header-B	       496.0 live-B/err	     496 B/op	       2 allocs/op
-BenchmarkFootprint_goerrors    	 2470648	       507.7 ns/op	        80.00 header-B	       496.0 live-B/err	     496 B/op	       2 allocs/op
-BenchmarkFootprint_eris        	  913936	      1313 ns/op	        48.00 header-B	       641.1 live-B/err	     840 B/op	       6 allocs/op
-BenchmarkFootprint_eris        	  939573	      1338 ns/op	        48.00 header-B	       633.4 live-B/err	     840 B/op	       6 allocs/op
-BenchmarkFootprint_eris        	  927097	      1359 ns/op	        48.00 header-B	       669.8 live-B/err	     840 B/op	       6 allocs/op
-BenchmarkFootprint_palantir    	  991942	      1383 ns/op	        80.00 header-B	       176.5 live-B/err	     560 B/op	       8 allocs/op
-BenchmarkFootprint_palantir    	 1000000	      1393 ns/op	        80.00 header-B	       171.7 live-B/err	     560 B/op	       8 allocs/op
-BenchmarkFootprint_palantir    	 1000000	      1362 ns/op	        80.00 header-B	       167.4 live-B/err	     560 B/op	       8 allocs/op
-BenchmarkFootprint_oops        	   72860	     16572 ns/op	       280.0 header-B	      1187 live-B/err	    4776 B/op	      76 allocs/op
-BenchmarkFootprint_oops        	   73692	     16595 ns/op	       280.0 header-B	      1303 live-B/err	    4776 B/op	      76 allocs/op
-BenchmarkFootprint_oops        	   73897	     16715 ns/op	       280.0 header-B	      1329 live-B/err	    4776 B/op	      76 allocs/op
-BenchmarkFootprint_tozd        	 2362018	       486.3 ns/op	        56.00 header-B	       328.0 live-B/err	     328 B/op	       3 allocs/op
-BenchmarkFootprint_tozd        	 2560791	       489.1 ns/op	        56.00 header-B	       328.0 live-B/err	     328 B/op	       3 allocs/op
-BenchmarkFootprint_tozd        	 2571508	       482.9 ns/op	        56.00 header-B	       328.0 live-B/err	     328 B/op	       3 allocs/op
-BenchmarkFootprint_errtrace    	40441371	        33.33 ns/op	        24.00 header-B	        26.64 live-B/err	      26 B/op	       0 allocs/op
-BenchmarkFootprint_errtrace    	36308301	        31.83 ns/op	        24.00 header-B	        26.64 live-B/err	      26 B/op	       0 allocs/op
-BenchmarkFootprint_errtrace    	36443840	        32.55 ns/op	        24.00 header-B	        26.64 live-B/err	      26 B/op	       0 allocs/op
-BenchmarkFootprint_mdobak      	 1958116	       717.0 ns/op	        40.00 header-B	      1072 live-B/err	    1072 B/op	       2 allocs/op
-BenchmarkFootprint_mdobak      	 2022464	       707.3 ns/op	        40.00 header-B	      1072 live-B/err	    1072 B/op	       2 allocs/op
-BenchmarkFootprint_mdobak      	 1940845	       679.9 ns/op	        40.00 header-B	      1072 live-B/err	    1072 B/op	       2 allocs/op
-BenchmarkFootprint_tracerr     	  256845	      4801 ns/op	        40.00 header-B	      1411 live-B/err	    2440 B/op	      15 allocs/op
-BenchmarkFootprint_tracerr     	  241720	      4858 ns/op	        40.00 header-B	      1342 live-B/err	    2440 B/op	      15 allocs/op
-BenchmarkFootprint_tracerr     	  243724	      4813 ns/op	        40.00 header-B	      1414 live-B/err	    2440 B/op	      15 allocs/op
-BenchmarkRealistic_stdlib      	 1344718	       887.7 ns/op	     302 B/op	      12 allocs/op
-BenchmarkRealistic_stdlib      	 1359932	       883.5 ns/op	     302 B/op	      12 allocs/op
-BenchmarkRealistic_stdlib      	 1365357	       880.7 ns/op	     302 B/op	      12 allocs/op
-BenchmarkRealistic_xerrors     	  402146	      2975 ns/op	     417 B/op	      13 allocs/op
-BenchmarkRealistic_xerrors     	  402969	      2985 ns/op	     417 B/op	      13 allocs/op
-BenchmarkRealistic_xerrors     	  408459	      2979 ns/op	     417 B/op	      13 allocs/op
-BenchmarkRealistic_werr        	 3296533	       365.3 ns/op	     266 B/op	       1 allocs/op
-BenchmarkRealistic_werr        	 2714982	       410.4 ns/op	     266 B/op	       1 allocs/op
-BenchmarkRealistic_werr        	 3869259	       349.7 ns/op	     266 B/op	       1 allocs/op
-BenchmarkRealistic_werrold     	  361758	      3245 ns/op	    1894 B/op	      18 allocs/op
-BenchmarkRealistic_werrold     	  379964	      3245 ns/op	    1894 B/op	      18 allocs/op
-BenchmarkRealistic_werrold     	  376047	      3234 ns/op	    1894 B/op	      18 allocs/op
-BenchmarkRealistic_pkgerrors   	  253605	      4747 ns/op	    1841 B/op	      19 allocs/op
-BenchmarkRealistic_pkgerrors   	  253129	      4739 ns/op	    1841 B/op	      19 allocs/op
-BenchmarkRealistic_pkgerrors   	  254130	      4738 ns/op	    1841 B/op	      19 allocs/op
-BenchmarkRealistic_cockroachdb 	  225559	      5271 ns/op	    1887 B/op	      20 allocs/op
-BenchmarkRealistic_cockroachdb 	  229785	      5278 ns/op	    1886 B/op	      20 allocs/op
-BenchmarkRealistic_cockroachdb 	  229825	      5244 ns/op	    1886 B/op	      20 allocs/op
-BenchmarkRealistic_emperror    	  252800	      4750 ns/op	     770 B/op	      19 allocs/op
-BenchmarkRealistic_emperror    	  250424	      4761 ns/op	     770 B/op	      19 allocs/op
-BenchmarkRealistic_emperror    	  254752	      4747 ns/op	     770 B/op	      19 allocs/op
-BenchmarkRealistic_errorx      	  667161	      1685 ns/op	    1452 B/op	       9 allocs/op
-BenchmarkRealistic_errorx      	  730852	      1672 ns/op	    1452 B/op	       9 allocs/op
-BenchmarkRealistic_errorx      	  731810	      1680 ns/op	    1452 B/op	       9 allocs/op
-BenchmarkRealistic_goerrors    	  950300	      1257 ns/op	    1002 B/op	      11 allocs/op
-BenchmarkRealistic_goerrors    	  990064	      1255 ns/op	    1002 B/op	      11 allocs/op
-BenchmarkRealistic_goerrors    	  979868	      1258 ns/op	    1002 B/op	      11 allocs/op
-BenchmarkRealistic_eris        	  125026	      9710 ns/op	    5210 B/op	      38 allocs/op
-BenchmarkRealistic_eris        	  126576	      9703 ns/op	    5210 B/op	      38 allocs/op
-BenchmarkRealistic_eris        	  127297	      9501 ns/op	    5210 B/op	      38 allocs/op
-BenchmarkRealistic_palantir    	  148957	      8074 ns/op	    3442 B/op	      50 allocs/op
-BenchmarkRealistic_palantir    	  148198	      8047 ns/op	    3441 B/op	      50 allocs/op
-BenchmarkRealistic_palantir    	  148891	      8061 ns/op	    3441 B/op	      50 allocs/op
-BenchmarkRealistic_oops        	    9310	    131992 ns/op	   39656 B/op	     585 allocs/op
-BenchmarkRealistic_oops        	    9326	    131201 ns/op	   39656 B/op	     585 allocs/op
-BenchmarkRealistic_oops        	    9267	    131332 ns/op	   39656 B/op	     585 allocs/op
-BenchmarkRealistic_tozd        	  243151	      4714 ns/op	    2073 B/op	      19 allocs/op
-BenchmarkRealistic_tozd        	  255459	      4692 ns/op	    2073 B/op	      19 allocs/op
-BenchmarkRealistic_tozd        	  256974	      4699 ns/op	    2073 B/op	      19 allocs/op
-BenchmarkRealistic_goplay      	  192832	      5947 ns/op	    3251 B/op	      41 allocs/op
-BenchmarkRealistic_goplay      	  199266	      6036 ns/op	    3251 B/op	      41 allocs/op
-BenchmarkRealistic_goplay      	  201897	      5943 ns/op	    3251 B/op	      41 allocs/op
-BenchmarkRealistic_errtrace    	 2785146	       426.3 ns/op	     185 B/op	       1 allocs/op
-BenchmarkRealistic_errtrace    	 2398938	       467.5 ns/op	     185 B/op	       1 allocs/op
-BenchmarkRealistic_errtrace    	 3227700	       468.7 ns/op	     185 B/op	       1 allocs/op
-BenchmarkRealistic_mdobak      	  222238	      5519 ns/op	    6457 B/op	      13 allocs/op
-BenchmarkRealistic_mdobak      	  220221	      5358 ns/op	    6457 B/op	      13 allocs/op
-BenchmarkRealistic_mdobak      	  227071	      5244 ns/op	    6457 B/op	      13 allocs/op
-BenchmarkSlogJSON_stdlib       	 2516571	       476.9 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogJSON_stdlib       	 2486349	       479.2 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogJSON_stdlib       	 2487459	       480.3 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogJSON_werr         	  249169	      4838 ns/op	    1128 B/op	       3 allocs/op
-BenchmarkSlogJSON_werr         	  256700	      4813 ns/op	    1128 B/op	       3 allocs/op
-BenchmarkSlogJSON_werr         	  242395	      4852 ns/op	    1128 B/op	       3 allocs/op
-BenchmarkSlogJSON_oops         	   10000	    109769 ns/op	  140392 B/op	    1110 allocs/op
-BenchmarkSlogJSON_oops         	   10000	    109766 ns/op	  140391 B/op	    1110 allocs/op
-BenchmarkSlogJSON_oops         	   10000	    110039 ns/op	  140391 B/op	    1110 allocs/op
+BenchmarkFootprint_stdlib      	10520851	       116.9 ns/op	        32.00 header-B	        36.00 live-B/err	      36 B/op	       2 allocs/op
+BenchmarkFootprint_stdlib      	12122196	       107.3 ns/op	        32.00 header-B	        36.00 live-B/err	      36 B/op	       2 allocs/op
+BenchmarkFootprint_stdlib      	11306101	       106.1 ns/op	        32.00 header-B	        36.00 live-B/err	      36 B/op	       2 allocs/op
+BenchmarkFootprint_xerrors     	 4468693	       274.0 ns/op	        56.00 header-B	        65.97 live-B/err	      68 B/op	       2 allocs/op
+BenchmarkFootprint_xerrors     	 4449304	       281.5 ns/op	        56.00 header-B	        65.98 live-B/err	      68 B/op	       2 allocs/op
+BenchmarkFootprint_xerrors     	 4407828	       275.0 ns/op	        56.00 header-B	        65.90 live-B/err	      68 B/op	       2 allocs/op
+BenchmarkFootprint_werr        	37797922	        29.57 ns/op	        40.00 header-B	        40.02 live-B/err	      40 B/op	       0 allocs/op
+BenchmarkFootprint_werr        	43746325	        28.64 ns/op	        40.00 header-B	        40.02 live-B/err	      40 B/op	       0 allocs/op
+BenchmarkFootprint_werr        	37832959	        28.00 ns/op	        40.00 header-B	        40.02 live-B/err	      40 B/op	       0 allocs/op
+BenchmarkFootprint_werrold     	 2526369	       465.7 ns/op	        72.00 header-B	       168.9 live-B/err	     328 B/op	       3 allocs/op
+BenchmarkFootprint_werrold     	 2261530	       463.0 ns/op	        72.00 header-B	       152.7 live-B/err	     328 B/op	       3 allocs/op
+BenchmarkFootprint_werrold     	 2482645	       454.9 ns/op	        72.00 header-B	       148.4 live-B/err	     328 B/op	       3 allocs/op
+BenchmarkFootprint_pkgerrors   	 2591074	       461.5 ns/op	        24.00 header-B	       304.0 live-B/err	     304 B/op	       3 allocs/op
+BenchmarkFootprint_pkgerrors   	 2769021	       463.4 ns/op	        24.00 header-B	       304.0 live-B/err	     304 B/op	       3 allocs/op
+BenchmarkFootprint_pkgerrors   	 2693444	       458.3 ns/op	        24.00 header-B	       304.0 live-B/err	     304 B/op	       3 allocs/op
+BenchmarkFootprint_cockroachdb 	 2648558	       468.4 ns/op	        24.00 header-B	       304.0 live-B/err	     304 B/op	       3 allocs/op
+BenchmarkFootprint_cockroachdb 	 2612697	       473.6 ns/op	        24.00 header-B	       304.0 live-B/err	     304 B/op	       3 allocs/op
+BenchmarkFootprint_cockroachdb 	 2555539	       473.9 ns/op	        24.00 header-B	       304.0 live-B/err	     304 B/op	       3 allocs/op
+BenchmarkFootprint_emperror    	 2152119	       544.5 ns/op	        24.00 header-B	        96.00 live-B/err	      96 B/op	       3 allocs/op
+BenchmarkFootprint_emperror    	 2206812	       535.9 ns/op	        24.00 header-B	        96.00 live-B/err	      96 B/op	       3 allocs/op
+BenchmarkFootprint_emperror    	 2263957	       531.6 ns/op	        24.00 header-B	        96.00 live-B/err	      96 B/op	       3 allocs/op
+BenchmarkFootprint_errorx      	 1000000	      1035 ns/op	        64.00 header-B	      1120 live-B/err	    1120 B/op	       3 allocs/op
+BenchmarkFootprint_errorx      	 1000000	      1010 ns/op	        64.00 header-B	      1120 live-B/err	    1120 B/op	       3 allocs/op
+BenchmarkFootprint_errorx      	 1203399	       971.0 ns/op	        64.00 header-B	      1120 live-B/err	    1120 B/op	       3 allocs/op
+BenchmarkFootprint_goerrors    	 2562006	       497.9 ns/op	        80.00 header-B	       496.0 live-B/err	     496 B/op	       2 allocs/op
+BenchmarkFootprint_goerrors    	 2510038	       491.2 ns/op	        80.00 header-B	       496.0 live-B/err	     496 B/op	       2 allocs/op
+BenchmarkFootprint_goerrors    	 2564968	       499.2 ns/op	        80.00 header-B	       496.0 live-B/err	     496 B/op	       2 allocs/op
+BenchmarkFootprint_eris        	  948522	      1333 ns/op	        48.00 header-B	       699.0 live-B/err	     840 B/op	       6 allocs/op
+BenchmarkFootprint_eris        	  871760	      1339 ns/op	        48.00 header-B	       700.3 live-B/err	     840 B/op	       6 allocs/op
+BenchmarkFootprint_eris        	  923754	      1351 ns/op	        48.00 header-B	       634.8 live-B/err	     840 B/op	       6 allocs/op
+BenchmarkFootprint_palantir    	 1974459	       602.0 ns/op	        80.00 header-B	       155.8 live-B/err	     352 B/op	       4 allocs/op
+BenchmarkFootprint_palantir    	 1989909	       601.3 ns/op	        80.00 header-B	       147.4 live-B/err	     352 B/op	       4 allocs/op
+BenchmarkFootprint_palantir    	 2003434	       605.0 ns/op	        80.00 header-B	       152.8 live-B/err	     352 B/op	       4 allocs/op
+BenchmarkFootprint_oops        	  970657	      1510 ns/op	       312.0 header-B	      1096 live-B/err	    1304 B/op	      11 allocs/op
+BenchmarkFootprint_oops        	 1000000	      1427 ns/op	       312.0 header-B	      1090 live-B/err	    1304 B/op	      11 allocs/op
+BenchmarkFootprint_oops        	 1000000	      1388 ns/op	       312.0 header-B	      1058 live-B/err	    1304 B/op	      11 allocs/op
+BenchmarkFootprint_tozd        	 2108400	       573.8 ns/op	        56.00 header-B	       328.0 live-B/err	     328 B/op	       3 allocs/op
+BenchmarkFootprint_tozd        	 2041557	       586.3 ns/op	        56.00 header-B	       328.0 live-B/err	     328 B/op	       3 allocs/op
+BenchmarkFootprint_tozd        	 2117589	       582.5 ns/op	        56.00 header-B	       328.0 live-B/err	     328 B/op	       3 allocs/op
+BenchmarkFootprint_errtrace    	36665851	        31.92 ns/op	        24.00 header-B	        26.64 live-B/err	      26 B/op	       0 allocs/op
+BenchmarkFootprint_errtrace    	36306243	        31.49 ns/op	        24.00 header-B	        26.64 live-B/err	      26 B/op	       0 allocs/op
+BenchmarkFootprint_errtrace    	36662210	        32.04 ns/op	        24.00 header-B	        26.64 live-B/err	      26 B/op	       0 allocs/op
+BenchmarkFootprint_mdobak      	 1954764	       638.2 ns/op	        40.00 header-B	      1072 live-B/err	    1072 B/op	       2 allocs/op
+BenchmarkFootprint_mdobak      	 2059677	       607.6 ns/op	        40.00 header-B	      1072 live-B/err	    1072 B/op	       2 allocs/op
+BenchmarkFootprint_mdobak      	 2036806	       614.4 ns/op	        40.00 header-B	      1072 live-B/err	    1072 B/op	       2 allocs/op
+BenchmarkFootprint_tracerr     	  238282	      4995 ns/op	        40.00 header-B	      1364 live-B/err	    2440 B/op	      15 allocs/op
+BenchmarkFootprint_tracerr     	  243200	      4925 ns/op	        40.00 header-B	      1344 live-B/err	    2440 B/op	      15 allocs/op
+BenchmarkFootprint_tracerr     	  207306	      5013 ns/op	        40.00 header-B	      1373 live-B/err	    2440 B/op	      15 allocs/op
+BenchmarkRealistic_stdlib      	 1367377	       874.5 ns/op	     302 B/op	      12 allocs/op
+BenchmarkRealistic_stdlib      	 1383484	       873.2 ns/op	     302 B/op	      12 allocs/op
+BenchmarkRealistic_stdlib      	 1381598	       869.2 ns/op	     302 B/op	      12 allocs/op
+BenchmarkRealistic_xerrors     	  416277	      2945 ns/op	     417 B/op	      13 allocs/op
+BenchmarkRealistic_xerrors     	  421204	      2869 ns/op	     417 B/op	      13 allocs/op
+BenchmarkRealistic_xerrors     	  424245	      2877 ns/op	     417 B/op	      13 allocs/op
+BenchmarkRealistic_werr        	 3317076	       359.0 ns/op	     266 B/op	       1 allocs/op
+BenchmarkRealistic_werr        	 3367201	       363.2 ns/op	     266 B/op	       1 allocs/op
+BenchmarkRealistic_werr        	 2899940	       414.1 ns/op	     266 B/op	       1 allocs/op
+BenchmarkRealistic_werrold     	  406017	      3171 ns/op	    1894 B/op	      18 allocs/op
+BenchmarkRealistic_werrold     	  364168	      3210 ns/op	    1894 B/op	      18 allocs/op
+BenchmarkRealistic_werrold     	  389967	      3147 ns/op	    1894 B/op	      18 allocs/op
+BenchmarkRealistic_pkgerrors   	  264028	      4576 ns/op	    1841 B/op	      19 allocs/op
+BenchmarkRealistic_pkgerrors   	  264075	      4621 ns/op	    1841 B/op	      19 allocs/op
+BenchmarkRealistic_pkgerrors   	  262527	      4565 ns/op	    1841 B/op	      19 allocs/op
+BenchmarkRealistic_cockroachdb 	  236798	      5014 ns/op	    1887 B/op	      20 allocs/op
+BenchmarkRealistic_cockroachdb 	  243116	      5009 ns/op	    1886 B/op	      20 allocs/op
+BenchmarkRealistic_cockroachdb 	  243052	      5041 ns/op	    1886 B/op	      20 allocs/op
+BenchmarkRealistic_emperror    	  263389	      4565 ns/op	     770 B/op	      19 allocs/op
+BenchmarkRealistic_emperror    	  263311	      4542 ns/op	     770 B/op	      19 allocs/op
+BenchmarkRealistic_emperror    	  265884	      4555 ns/op	     770 B/op	      19 allocs/op
+BenchmarkRealistic_errorx      	  742160	      1624 ns/op	    1452 B/op	       9 allocs/op
+BenchmarkRealistic_errorx      	  763830	      1629 ns/op	    1452 B/op	       9 allocs/op
+BenchmarkRealistic_errorx      	  732861	      1698 ns/op	    1452 B/op	       9 allocs/op
+BenchmarkRealistic_goerrors    	  943695	      1219 ns/op	    1002 B/op	      11 allocs/op
+BenchmarkRealistic_goerrors    	 1000000	      1219 ns/op	    1002 B/op	      11 allocs/op
+BenchmarkRealistic_goerrors    	 1000000	      1210 ns/op	    1002 B/op	      11 allocs/op
+BenchmarkRealistic_eris        	  127830	      9351 ns/op	    5210 B/op	      38 allocs/op
+BenchmarkRealistic_eris        	  128340	      9578 ns/op	    5210 B/op	      38 allocs/op
+BenchmarkRealistic_eris        	  128502	      9246 ns/op	    5210 B/op	      38 allocs/op
+BenchmarkRealistic_palantir    	  309666	      3836 ns/op	    2193 B/op	      26 allocs/op
+BenchmarkRealistic_palantir    	  314013	      3846 ns/op	    2193 B/op	      26 allocs/op
+BenchmarkRealistic_palantir    	  312714	      3861 ns/op	    2193 B/op	      26 allocs/op
+BenchmarkRealistic_oops        	  101169	     11706 ns/op	    7836 B/op	      67 allocs/op
+BenchmarkRealistic_oops        	  101020	     11804 ns/op	    7836 B/op	      67 allocs/op
+BenchmarkRealistic_oops        	  101998	     11843 ns/op	    7836 B/op	      67 allocs/op
+BenchmarkRealistic_tozd        	  254401	      4806 ns/op	    2073 B/op	      19 allocs/op
+BenchmarkRealistic_tozd        	  251011	      4566 ns/op	    2073 B/op	      19 allocs/op
+BenchmarkRealistic_tozd        	  264304	      4576 ns/op	    2073 B/op	      19 allocs/op
+BenchmarkRealistic_goplay      	  199153	      5836 ns/op	    3251 B/op	      41 allocs/op
+BenchmarkRealistic_goplay      	  208814	      5830 ns/op	    3251 B/op	      41 allocs/op
+BenchmarkRealistic_goplay      	  206889	      5825 ns/op	    3251 B/op	      41 allocs/op
+BenchmarkRealistic_errtrace    	 2845351	       420.9 ns/op	     185 B/op	       1 allocs/op
+BenchmarkRealistic_errtrace    	 2445699	       463.0 ns/op	     185 B/op	       1 allocs/op
+BenchmarkRealistic_errtrace    	 3244545	       463.9 ns/op	     185 B/op	       1 allocs/op
+BenchmarkRealistic_mdobak      	  227240	      5378 ns/op	    6457 B/op	      13 allocs/op
+BenchmarkRealistic_mdobak      	  223052	      5265 ns/op	    6457 B/op	      13 allocs/op
+BenchmarkRealistic_mdobak      	  237043	      5082 ns/op	    6457 B/op	      13 allocs/op
+BenchmarkSlogJSON_stdlib       	 2539540	       476.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogJSON_stdlib       	 2554876	       469.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogJSON_stdlib       	 2532207	       472.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogJSON_werr         	  248704	      4798 ns/op	    1128 B/op	       3 allocs/op
+BenchmarkSlogJSON_werr         	  252668	      4806 ns/op	    1128 B/op	       3 allocs/op
+BenchmarkSlogJSON_werr         	  253504	      4800 ns/op	    1128 B/op	       3 allocs/op
+BenchmarkSlogJSON_oops         	  132960	     10047 ns/op	    9393 B/op	      64 allocs/op
+BenchmarkSlogJSON_oops         	  133302	      8970 ns/op	    9393 B/op	      64 allocs/op
+BenchmarkSlogJSON_oops         	  136156	      8882 ns/op	    9393 B/op	      64 allocs/op
 PASS
-ok  	github.com/gokern/werr/benchmark	150.358s
+ok  	github.com/gokern/werr/benchmark	149.524s
 PASS
-ok  	github.com/gokern/werr/benchmark/cmd/bench-chart	0.543s
+ok  	github.com/gokern/werr/benchmark/cmd/bench-chart	0.390s
