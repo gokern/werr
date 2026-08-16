@@ -10,7 +10,7 @@ require (
 	github.com/go-playground/errors/v5 v5.4.0
 	github.com/gokern/werr v0.0.0-00010101000000-000000000000
 	github.com/joomcode/errorx v1.2.0
-	github.com/mdobak/go-xerrors v1.0.0
+	github.com/mdobak/go-xerrors v1.0.1
 	github.com/palantir/stacktrace v0.0.0-20161112013806-78658fd2d177
 	github.com/pkg/errors v0.9.1
 	github.com/rotisserie/eris v0.5.4
