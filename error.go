@@ -3,7 +3,7 @@ package werr
 import (
 	"runtime"
 
-	"github.com/gokern/werr/internal/arena"
+	"github.com/gokern/werr/v2/internal/arena"
 )
 
 // Error wraps another error with a captured caller PC and an optional
@@ -22,11 +22,6 @@ type Error struct {
 
 //nolint:gochecknoglobals,mnd
 var _arena = arena.New[Error](1024)
-
-// stackSkip is the number of leading frames runtime.Callers must skip when
-// invoked through capturePanicStack: runtime.Callers itself,
-// capturePanicStack, and the public entry point (PanicToError or Recover).
-const stackSkip = 3
 
 func newError(err error, msg string, pc uintptr) error {
 	e := _arena.Take()
@@ -144,6 +139,11 @@ func (e *Error) PC() uintptr {
 // sentry-go discovers this method by reflection: it looks up "StackTrace"
 // by name on the outermost error. Calling sentry.CaptureException(err)
 // picks up the werr stack with no glue code on the user side.
+//
+// The signature is `[]uintptr` and not a named slice type on purpose.
+// Consumers match this method by name and read the reflect.Kind of the
+// elements, so `[]uintptr` and pkg/errors' `[]Frame` both work; there is
+// no interface to conform to. CLAUDE.md has the survey behind that.
 //
 // Iteration stops at the first non-werr link, just like [Walk] and
 // [Callers]. Wrapping a werr error with fmt.Errorf("%w", werrErr) hides

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gokern/werr"
+	"github.com/gokern/werr/v2"
 )
 
 // Wrap adds a single werr layer to err, capturing the file, line and

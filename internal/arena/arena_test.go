@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gokern/werr/internal/arena"
+	"github.com/gokern/werr/v2/internal/arena"
 )
 
 type box struct {

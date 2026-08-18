@@ -3,7 +3,7 @@
 [![CI](https://github.com/gokern/werr/actions/workflows/ci.yml/badge.svg)](https://github.com/gokern/werr/actions/workflows/ci.yml)
 [![Lint](https://github.com/gokern/werr/actions/workflows/lint.yml/badge.svg)](https://github.com/gokern/werr/actions/workflows/lint.yml)
 [![CodeQL](https://github.com/gokern/werr/actions/workflows/codeql.yml/badge.svg)](https://github.com/gokern/werr/actions/workflows/codeql.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/gokern/werr.svg)](https://pkg.go.dev/github.com/gokern/werr)
+[![Go Reference](https://pkg.go.dev/badge/github.com/gokern/werr/v2.svg)](https://pkg.go.dev/github.com/gokern/werr/v2)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/gokern/werr)](go.mod)
 [![Release](https://img.shields.io/github/v/release/gokern/werr?include_prereleases&sort=semver)](https://github.com/gokern/werr/releases)
 [![License](https://img.shields.io/github/license/gokern/werr)](LICENSE)
@@ -21,10 +21,10 @@ It costs 8 bytes per wrap, the file/line lookup happens lazily on render, and st
 ## Install
 
 ```sh
-go get github.com/gokern/werr
+go get github.com/gokern/werr/v2
 ```
 
-Requires Go 1.26+.
+Requires Go 1.26+. One dependency, [`gokern/panics`](https://github.com/gokern/panics), which has none of its own.
 
 ## Example
 
@@ -102,17 +102,29 @@ werr.Walk(err, func(f werr.Frame) bool { /* zero-alloc iteration */ return true 
 
 `IsWrap` and `AsWrap` traverse the full chain, so they still find a werr layer hidden behind `fmt.Errorf("ctx: %w", werr.Wrap(...))`.
 
-### Recover from panics
+### Recovered panics
+
+werr does not recover panics — containing one is a separate job, and [`gokern/panics`](https://github.com/gokern/panics) does it. werr renders what comes back:
 
 ```go
-func DoStuff() (err error) {
-    defer werr.Recover(&err)   // must be directly in defer, not nested
-    panicProneCode()
+func deliver(msg Message) error {
+    if p := panics.Catch(func() { handler(msg) }); p != nil {
+        return werr.Wrapf(p, "delivering message %d", msg.ID)
+    }
     return nil
 }
 ```
 
-For full control over the recover site, call `werr.PanicToError(p)` from inside your own `defer recover` block.
+| channel | what it shows |
+|---|---|
+| `Pretty` | the panic's frames, in the same `--- at` shape as wrap frames |
+| `OneLine` | one further segment: `panic at handler.go:16 (handler)` |
+| `LogValue` | a `panicFrames` array, present only when there is a panic |
+| `Callers` | werr's own wrap sites only |
+
+All three channels find the panic with `panics.As`, which reaches it through `errors.Join` and `fmt.Errorf("%w: %w", ErrSentinel, p)` — the shapes a panic actually arrives in. The wrap is optional for rendering: `werr.Pretty(p)` on a panic straight out of `Catch` prints the same stack that `werr.Pretty(werr.Wrap(p))` does.
+
+`Callers` stays out of it on purpose: a recovered panic carries a complete goroutine stack down to `runtime.goexit`, and the wrap sites are frames from that same stack, so splicing the two produces a trace that cannot exist. Reach the panic stack through `panics.As(err).StackTrace()`, which is also where sentry-go finds it by reflection.
 
 ## Formatters
 
@@ -133,6 +145,8 @@ fmt.Println(werr.OneLine(err))
 ### Sending werr errors to Sentry / OpenTelemetry / Datadog
 
 `*werr.Error` implements `StackTrace() []uintptr`, the duck-typed protocol `sentry-go` looks up by reflection. `sentry.CaptureException(err)` picks up the wrap-site stack with no glue code and no helper sub-package to import.
+
+The panic case needs nothing extra either. Sentry builds one exception per link in the chain, and `*panics.Panic` answers the same protocol, so the panic frames arrive under their own entry while the werr entries carry the wrap sites.
 
 ```go
 err := werr.Wrapf(loadConfig(), "boot")
@@ -155,7 +169,7 @@ if len(pcs) > 0 {
 }
 ```
 
-`Callers` returns frames in innermost-first order (closest to the leaf at index 0), matches the `runtime.Callers` convention, allocates exactly one slice, and stops at the first non-werr link in the chain.
+`Callers` returns frames in innermost-first order (closest to the leaf at index 0), matches the `runtime.Callers` convention, allocates exactly one slice, and stops at the first non-werr link in the chain. It reports only wrap sites werr captured itself — for a recovered panic's own stack, use `panics.As(err).StackTrace()`.
 
 ### Custom formatters
 

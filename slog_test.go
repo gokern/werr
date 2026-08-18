@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"testing"
 
+	"github.com/gokern/panics"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gokern/werr"
+	"github.com/gokern/werr/v2"
 )
 
 // logRecord mirrors the JSON shape emitted when a werr.Error is logged
@@ -23,6 +25,13 @@ type logRecord struct {
 			Line int    `json:"line"`
 			Msg  string `json:"msg"`
 		} `json:"frames"`
+		// PanicFrames is a pointer so the tests can tell an absent key from
+		// an empty array — that distinction is the contract.
+		PanicFrames *[]struct {
+			Func string `json:"func"`
+			File string `json:"file"`
+			Line int    `json:"line"`
+		} `json:"panicFrames"`
 	} `json:"err"`
 }
 
@@ -136,5 +145,50 @@ func TestError_LogValue(t *testing.T) {
 
 		require.Equal(t, "leaf", got.Err.Msg)
 		require.Len(t, got.Err.Frames, depth, "every werr layer must appear as a frame")
+	})
+}
+
+//go:noinline
+func raisePanicForSlog() { panic("boom") }
+
+// panics ships no slog integration of its own and hands that to werr in its
+// README. These tests are that hand-off.
+func TestError_LogValue_panicFrames(t *testing.T) {
+	t.Parallel()
+
+	t.Run("absent when there is no panic", func(t *testing.T) {
+		t.Parallel()
+
+		got := decodeSlogErr(t, werr.Wrapf(errors.New("leaf"), "ctx"))
+		require.Nil(t, got.Err.PanicFrames,
+			"an ordinary error must not carry the key at all, not even empty")
+	})
+
+	t.Run("present with the panic site first", func(t *testing.T) {
+		t.Parallel()
+
+		got := decodeSlogErr(t, werr.Wrapf(panics.Catch(raisePanicForSlog), "delivering"))
+
+		require.NotNil(t, got.Err.PanicFrames, "the key is the signal a dashboard filters on")
+		require.NotEmpty(t, *got.Err.PanicFrames)
+
+		frames := *got.Err.PanicFrames
+		require.Contains(t, frames[0].Func, "raisePanicForSlog",
+			"innermost first puts the panic site at index 0")
+		require.NotEmpty(t, frames[0].File, "file must be the full path, as for wrap frames")
+		require.Positive(t, frames[0].Line)
+
+		require.Equal(t, "panic: boom", got.Err.Msg)
+		require.Len(t, got.Err.Frames, 1, "wrap frames stay separate from panic frames")
+	})
+
+	t.Run("found when the chain buried the panic", func(t *testing.T) {
+		t.Parallel()
+
+		leaf := fmt.Errorf("task %q: %w", "sync", panics.Catch(raisePanicForSlog))
+
+		got := decodeSlogErr(t, werr.Wrapf(leaf, "delivering"))
+		require.NotNil(t, got.Err.PanicFrames,
+			"panics.As must reach a panic behind fmt.Errorf, the idiom panics recommends")
 	})
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gokern/werr"
+	"github.com/gokern/werr/v2"
 )
 
 // IsWrap reports whether err's chain contains a werr.Error anywhere,

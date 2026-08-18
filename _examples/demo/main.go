@@ -13,7 +13,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/gokern/werr"
+	"github.com/gokern/panics"
+
+	"github.com/gokern/werr/v2"
 )
 
 // User stands in for a domain type; the chain is what's on display.
@@ -54,11 +56,16 @@ func handler() error {
 //nolint:nonamedreturns // divide-by-zero relies on the zero value of the named return.
 func divideByZero() (n int) { return 1 / n }
 
-//nolint:nonamedreturns // werr.Recover writes the wrapped panic into a named error return.
-func mustParse() (out int, err error) {
-	defer werr.Recover(&err)
+// werr does not recover panics; panics.Catch does, and werr wraps the result
+// with the call site that was handling the request when it blew up.
+func mustParse() (int, error) {
+	var out int
 
-	return divideByZero(), nil
+	if p := panics.Catch(func() { out = divideByZero() }); p != nil {
+		return 0, werr.Wrapf(p, "parsing user input")
+	}
+
+	return out, nil
 }
 
 func main() {
@@ -67,7 +74,7 @@ func main() {
 	demoAsWrap()
 	demoWalk()
 	demoErrorsIs()
-	demoRecover()
+	demoRecoveredPanic()
 	demoCustomFormatter()
 }
 
@@ -138,8 +145,8 @@ func demoErrorsIs() {
 
 // --- 6. Panic recovery ----------------------------------------------------
 
-func demoRecover() {
-	header("Recover — turn a panic into a werr.Error")
+func demoRecoveredPanic() {
+	header("Recovered panic — panics.Catch contains it, werr renders it")
 
 	_, err := mustParse()
 	fmt.Println(err)

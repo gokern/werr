@@ -10,7 +10,7 @@ import (
 	cockroach "github.com/cockroachdb/errors"
 	goerrors "github.com/go-errors/errors"
 	goplay "github.com/go-playground/errors/v5"
-	"github.com/gokern/werr"
+	"github.com/gokern/werr/v2"
 	"github.com/joomcode/errorx"
 	mdobak "github.com/mdobak/go-xerrors"
 	"github.com/palantir/stacktrace"

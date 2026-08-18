@@ -18,12 +18,11 @@ func Caller() uintptr {
 	// Skip 3: runtime.Callers, pc.Caller, pc.Caller's caller (e.g. werr.Wrap).
 	// Frame 3 is the user code we want to attribute the wrap to.
 	//
-	// Note: when pc.Caller is invoked from a deferred function (the Recover
-	// path), frame 3 lands on the defer-dispatch site rather than the user's
-	// `defer werr.Recover(&err)` line. This ambiguity is acknowledged by the
-	// absence of a Recover-specific call-site test (see the comment above
-	// TestPanicToError_capturesCallerLine) and applies equally to the asm
-	// fast path.
+	// The count holds only because every caller is a wrap entry point invoked
+	// directly by user code. Call pc.Caller from a deferred function and
+	// frame 3 lands on the defer-dispatch site rather than the user's source
+	// line. The call-site tests in werr's wrap_test.go are the gate for both
+	// this path and the asm one.
 	var pcs [1]uintptr
 	if n := runtime.Callers(3, pcs[:]); n == 0 {
 		return 0

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"io"
 	"runtime"
+	"strings"
 	"testing"
 
+	"github.com/gokern/panics"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gokern/werr"
+	"github.com/gokern/werr/v2"
 )
 
 func TestCallers_nilErr_returnsNil(t *testing.T) {
@@ -156,4 +158,41 @@ func TestCallers_singleAllocation(t *testing.T) {
 
 	require.LessOrEqual(t, allocs, 1.0,
 		"Callers must allocate exactly the result slice and nothing else; got %.2f", allocs)
+}
+
+//go:noinline
+func raisePanic() { panic("boom") }
+
+// A recovered panic carries a complete goroutine stack, down to
+// runtime.goexit. The wrap sites are frames from that same stack, so
+// appending them would place code outside goexit — a trace that cannot
+// exist. Callers therefore reports wrap sites only, and the panic stack
+// stays reachable, unspliced, through panics.As.
+func TestCallers_excludesThePanicStack(t *testing.T) {
+	t.Parallel()
+
+	err := werr.Wrapf(panics.Catch(raisePanic), "delivering")
+
+	pcs := werr.Callers(err)
+	require.Len(t, pcs, 1, "only the wrap site belongs to werr")
+
+	fn := runtime.FuncForPC(pcs[0])
+	require.NotNil(t, fn)
+	require.Contains(t, fn.Name(), "TestCallers_excludesThePanicStack",
+		"the one PC must be this test's Wrapf call site")
+
+	p, ok := panics.As(err)
+	require.True(t, ok, "the panic must still be reachable")
+
+	frame, _ := runtime.CallersFrames(p.StackTrace()).Next()
+	require.True(t, strings.HasSuffix(frame.Function, ".raisePanic"),
+		"panics.As is where the panic site lives, got %q", frame.Function)
+}
+
+func TestCallers_bareErrorStillReturnsNil(t *testing.T) {
+	t.Parallel()
+
+	// A *panics.Panic that is not wrapped in a *werr.Error is not werr's to
+	// report; sentry finds its StackTrace() directly.
+	require.Nil(t, werr.Callers(panics.Catch(raisePanic)))
 }

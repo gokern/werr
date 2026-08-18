@@ -1,6 +1,7 @@
-// Package werr is a small error-wrapping library that captures the caller's
-// file, line, and function name at every wrap site so error chains read like
-// a stack trace.
+// Package werr is a small error-wrapping library. Each wrap stores one program
+// counter, 8 bytes, and resolves it into file, line and function name only when
+// the error is rendered. A chain of them reads like a stack trace of the points
+// you chose to mark.
 //
 // # Wrapping
 //
@@ -31,11 +32,25 @@
 // Stripping is only needed when forwarding to code that does concrete-type
 // assertions; [errors.Is] and [errors.As] traverse werr layers transparently.
 //
-// # Panic recovery
+// # Recovered panics
 //
-//   - [Recover] is a deferred-function helper: `defer werr.Recover(&err)`.
-//   - [PanicToError] is the explicit primitive when you need to call
-//     recover() yourself.
+// werr does not recover panics; containing one is a separate job, and
+// [github.com/gokern/panics] does it:
+//
+//	if p := panics.Catch(deliver); p != nil {
+//	    return werr.Wrapf(p, "delivering message %d", id)
+//	}
+//
+// What werr does is render what comes back. [PrettyFormatter] appends the
+// panic's own frames after the leaf, [OneLineFormatter] names the panic site
+// in one further segment, and [Error.LogValue] emits them as "panicFrames".
+// All three find the panic with panics.As, which reaches it through
+// errors.Join and fmt.Errorf. The wrap is optional for rendering: [Pretty]
+// and [OneLine] show the panic site on an error with no werr layer at all.
+//
+// [Callers] reports only werr's own wrap sites; reach the panic stack through
+// panics.As(err).StackTrace(), which is also where sentry-go finds it by
+// reflection.
 //
 // # Formatting
 //

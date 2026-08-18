@@ -42,7 +42,7 @@ Core wrap libraries:
 
 | Alias | Import | Notes |
 |---|---|---|
-| `werr` | `github.com/gokern/werr` | single PC, lazy resolve |
+| `werr` | `github.com/gokern/werr/v2` | single PC, lazy resolve |
 | `werrold` | `github.com/safeblock-dev/werr` | older werr release tracked as a regression baseline (eager file/line/func) |
 | `pkgerrors` | `github.com/pkg/errors` | classic; full goroutine stack |
 | `palantir` | `github.com/palantir/stacktrace` | one frame per Propagate |
@@ -127,8 +127,8 @@ The full suite is light enough to reproduce on a developer laptop. From
 the repo root:
 
 ```sh
-make bench-full       # ~90 sec — writes benchmark/RESULTS.txt and
-                      # regenerates benchmark/charts/*.svg from it
+make bench-full       # writes benchmark/RESULTS.txt and regenerates
+                      # benchmark/charts/*.svg from it
 ```
 
 For finer control:
@@ -159,15 +159,32 @@ section was produced on:
 | key | value |
 |---|---|
 | Go version | `go1.26.5` |
-| GOOS / GOARCH | `darwin / arm64` |
-| CPU model | `Apple M1` |
+| GOOS / GOARCH | `linux / amd64` |
+| CPU model | `Intel Xeon (Icelake), 2.0 GHz, 4 vCPU` |
+| OS | Debian 11 (bullseye) |
 | Cores used | `1` (`-cpu 1`) |
 | Benchtime | `1s` |
-| Count | `3` |
+| Count | `10` |
+| Checkout path | `/home/aleksandrleonchik/werr` (28 chars) |
 | Library versions | pinned in `benchmark/go.mod` |
 
-The suite is light enough that `-benchtime 1s -count 3` is statistically
-sufficient and finishes in ~90 sec.
+The checkout path is in the table because some libraries build their
+messages out of `runtime` file paths and size buffers from them, so
+`B/op` moves with how deep the tree sits. Between two runs that
+differed only in path depth, `palantir` moved 2200 to 2193 B/op and
+`oops` moved 10625 to 9393 on slog. werr is unaffected: its Builder
+estimate reserves the base name it actually writes, which
+`TestFormatEstimates_doNotScaleWithCheckoutDepth` pins.
+
+A dedicated idle VM, load average below 1 for the whole run. That
+matters more than the hardware: an earlier attempt on a workstation at
+load 179 inflated every library by 650-1200%, stdlib included, which
+reads as a werr regression until you notice stdlib moved too.
+
+`-count 10` rather than 3, and the reason is in the Caveats: the two
+fastest bars are noisy enough that a 3-run median is not trustworthy for
+exactly the libraries this suite exists to compare. The full run takes
+~8 min at that count.
 
 The competing libraries are ordinary module dependencies, so a
 dependency bump moves the numbers below without touching a line of
@@ -216,14 +233,37 @@ The 1% print rate inside Realistic gives both styles a fair window.
 release of werr kept here as a regression baseline. Drift in its
 upstream version moves that column independently of the current werr.
 
-The Results section is curated. Medians below were eyeballed from
-`RESULTS.txt`. For ranges and statistical confidence, run `benchstat
-RESULTS.txt` directly.
+The fastest bars are the least certain. Run-to-run spread scales
+inversely with how long an iteration takes, and it is large at the top
+of the table:
+
+| library | median | spread across 10 runs |
+|---|---:|---:|
+| `werr` | 692 ns | 38% |
+| `errtrace` | 729 ns | 33% |
+| `stdlib` | 1652 ns | 3% |
+| everything >= 2 us | | 1-3% |
+
+Spread is `(max - min) / median` over the ten samples.
+
+Each of those samples already averages over a million iterations, so
+this is variance between processes, not inside the loop: code and data
+layout, scheduling, and a shared-tenancy vCPU all land harder on a
+700 ns iteration than on a 21 us one. Two consequences. Read a
+sub-microsecond bar as a band rather than a number. And do not diff two
+`-count 3` runs of `Realistic_werr` and call the result a regression:
+that is how a phantom +24% was chased here before the spread was
+measured.
+
+The Results section is curated. Medians below were computed from
+`RESULTS.txt`. For confidence intervals, run `benchstat RESULTS.txt`
+directly.
 
 ## Results
 
 Snapshot of medians from one `make bench-full` run (`-benchtime 1s
--cpu 1 -count 3`) on the environment above.
+-cpu 1 -count 10`) on the environment above. Absolute times are ~2x the
+figures an M1 produces; the ranking is what travels between machines.
 
 ### Realistic — full request lifecycle
 
@@ -236,22 +276,22 @@ numbers is at the top of this document.
 
 | library | ns/op | B/op | allocs/op | notes |
 |---|---:|---:|---:|---|
-| `werr` | 363 | 266 | 1 | asm PC capture, arena-pooled wrapper |
-| `errtrace` | 463 | 185 | 1 | arena-pooled wrap; no native message API, so msg-leaves go through `fmt.Errorf` |
-| `stdlib` | 873 | 302 | 12 | no frame capture |
-| `goerrors` | 1219 | 1002 | 11 | `WrapPrefix` shares one stack across N prefixes |
-| `errorx` | 1629 | 1452 | 9 | `Decorate` shares one stack across N wrappers |
-| `xerrors` | 2877 | 417 | 13 | one `Frame` per wrap |
-| `werrold` | 3171 | 1894 | 18 | older werr release, eager file/line/func, no arena |
-| `palantir` | 3846 | 2193 | 26 | one frame + msg per layer; `errors.Is` short-circuits early (Propagate hides `Unwrap`) |
-| `emperror` | 4555 | 770 | 19 | full stack (pkg/errors-style) |
-| `pkgerrors` | 4576 | 1841 | 19 | full stack per wrap |
-| `tozd` | 4576 | 2073 | 19 | full stack per wrap |
-| `cockroachdb` | 5014 | 1886 | 20 | full stack per wrap |
-| `mdobak` | 5265 | 6457 | 13 | full stack per wrap |
-| `goplay` | 5830 | 3251 | 41 | full stack per wrap |
-| `eris` | 9351 | 5210 | 38 | full stack per wrap |
-| `oops` | 11804 | 7836 | 67 | full stack + rich context per layer |
+| `werr` | 692 | 263 | 1 | asm PC capture, arena-pooled wrapper |
+| `errtrace` | 729 | 185 | 1 | arena-pooled wrap; no native message API, so msg-leaves go through `fmt.Errorf` |
+| `stdlib` | 1652 | 302 | 12 | no frame capture |
+| `goerrors` | 2253 | 1002 | 11 | `WrapPrefix` shares one stack across N prefixes |
+| `errorx` | 3093 | 1452 | 9 | `Decorate` shares one stack across N wrappers |
+| `xerrors` | 5116 | 417 | 13 | one `Frame` per wrap |
+| `werrold` | 5558 | 1894 | 18 | older werr release, eager file/line/func, no arena |
+| `palantir` | 7100 | 2193 | 26 | one frame + msg per layer; `errors.Is` short-circuits early (Propagate hides `Unwrap`) |
+| `pkgerrors` | 7928 | 1841 | 19 | full stack per wrap |
+| `tozd` | 8098 | 2073 | 19 | full stack per wrap |
+| `emperror` | 8880 | 770 | 19 | full stack (pkg/errors-style) |
+| `cockroachdb` | 8990 | 1886 | 20 | full stack per wrap |
+| `mdobak` | 9006 | 6457 | 13 | full stack per wrap |
+| `goplay` | 10389 | 3251 | 41 | full stack per wrap |
+| `eris` | 16404 | 5210 | 38 | full stack per wrap |
+| `oops` | 20783 | 7836 | 67 | full stack + rich context per layer |
 
 The two arena-pooled libraries (werr, errtrace) average 1 alloc/op
 because the wrapper itself is reused; the only allocation per iteration
@@ -273,9 +313,9 @@ attached error is a 15-deep wrap chain.
 
 | library | ns/op | B/op | allocs/op | notes |
 |---|---:|---:|---:|---|
-| `stdlib` | 472 | 0 | 0 | falls back to `Error()` (cached after first call) |
-| `werr` | 4800 | 1128 | 3 | structured group via `LogValuer` |
-| `oops` | 8970 | 9393 | 64 | structured group + per-layer attributes |
+| `stdlib` | 840 | 0 | 0 | falls back to `Error()` (cached after first call) |
+| `werr` | 8855 | 1128 | 3 | structured group via `LogValuer` |
+| `oops` | 16496 | 9393 | 64 | structured group + per-layer attributes |
 
 werr and oops both emit a structured group with per-frame info, which
 is the cost of having structured frames in JSON logs at all. stdlib
@@ -297,19 +337,19 @@ in RESULTS.txt next to the dynamic metric.
 | `errtrace` | 24 | 27 | arena-pooled, no message field |
 | `stdlib` | 32 | 36 | |
 | `werr` | 40 | 40 | arena-pooled `*Error` |
-| `xerrors` | 56 | 66 | one `Frame` per wrap |
+| `xerrors` | 56 | 65 | one `Frame` per wrap |
 | `emperror` | 24 | 96 | |
-| `werrold` | 72 | 153 | older werr release, eager file/line/func |
-| `palantir` | 80 | 153 | |
+| `palantir` | 80 | 158 | |
+| `werrold` | 72 | 161 | older werr release, eager file/line/func |
 | `pkgerrors` | 24 | 304 | full goroutine stack |
 | `cockroachdb` | 24 | 304 | full goroutine stack |
 | `tozd` | 56 | 328 | |
 | `goerrors` | 80 | 496 | |
-| `eris` | 48 | 699 | |
+| `eris` | 48 | 659 | |
+| `oops` | 312 | 1066 | rich context |
 | `mdobak` | 40 | 1072 | |
-| `oops` | 312 | 1090 | rich context |
 | `errorx` | 64 | 1120 | |
-| `tracerr` | 40 | 1364 | full stack + source excerpts |
+| `tracerr` | 40 | 1379 | full stack + source excerpts |
 
 Header bytes is the static struct size; live-B/err includes the
 struct, any captured frames, message buffers, and other auxiliary

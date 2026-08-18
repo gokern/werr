@@ -5,13 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 	"testing"
 
 	sentry "github.com/getsentry/sentry-go"
+	"github.com/gokern/panics"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gokern/werr"
+	"github.com/gokern/werr/v2"
 )
 
 // makeInner / makeMiddle / makeOuter are the same helpers used in core
@@ -223,4 +225,82 @@ func TestExtractStacktrace_jsonRoundTrip(t *testing.T) {
 		require.Equal(t, original.Frames[i].Function, roundTripped.Frames[i].Function)
 		require.Equal(t, original.Frames[i].Lineno, roundTripped.Frames[i].Lineno)
 	}
+}
+
+// panicDeep / panicMid are the recovered-panic counterpart to
+// makeInner/makeMiddle/makeOuter above: distinct //go:noinline frames so the
+// resolved sentry frames stay distinguishable instead of collapsing.
+//
+//go:noinline
+func panicDeep() { panic("boom") }
+
+//go:noinline
+func panicMid() { panicDeep() }
+
+// caughtPanic is the shape an application produces: something contained the
+// panic, werr wraps the result and returns it outward.
+func caughtPanic() error {
+	return werr.Wrapf(panics.Catch(panicMid), "delivering message")
+}
+
+// The load-bearing claim behind werr not splicing panic frames into Callers:
+// sentry finds them anyway. SetException walks the chain and builds one
+// exception per link, so *panics.Panic contributes its own stack through the
+// StackTrace() method panics implements for exactly this reason, and the
+// werr.Error links contribute only what werr captured.
+//
+// If this ever fails, the argument for keeping Callers panic-free fails with
+// it, because then werr would be the only thing standing between a panic and
+// an APM dashboard.
+func TestSetException_reachesThePanicSiteWithoutWerrSplicing(t *testing.T) {
+	t.Parallel()
+
+	event := sentry.NewEvent()
+	event.SetException(caughtPanic(), 10)
+
+	var panicStack, werrStack *sentry.Stacktrace
+
+	for _, ex := range event.Exception {
+		switch ex.Type {
+		case "*panics.Panic":
+			panicStack = ex.Stacktrace
+		case "*werr.Error":
+			werrStack = ex.Stacktrace
+		}
+	}
+
+	require.NotNil(t, panicStack, "sentry must build an exception for the *panics.Panic link")
+	require.NotEmpty(t, panicStack.Frames)
+
+	// sentry orders frames with the most recent call last.
+	names := make([]string, len(panicStack.Frames))
+	for i, f := range panicStack.Frames {
+		names[i] = f.Function
+	}
+
+	require.True(t, strings.HasSuffix(names[len(names)-1], "panicDeep"),
+		"the panic site must be the most recent frame, got %q", names[len(names)-1])
+	require.True(t, slices.ContainsFunc(names, func(name string) bool {
+		return strings.HasSuffix(name, "panicMid")
+	}), "intermediate panic frames must survive, got %v", names)
+
+	require.NotNil(t, werrStack, "the werr link must still report its own wrap sites")
+	require.Len(t, werrStack.Frames, 1,
+		"werr contributes the wrap site and nothing else; duplicating the panic frames "+
+			"here is what dropping the Callers prepend removed")
+	require.True(t, strings.HasSuffix(werrStack.Frames[0].Function, "caughtPanic"),
+		"got %q", werrStack.Frames[0].Function)
+}
+
+// ExtractStacktrace reads the outermost error only, so on a wrapped panic it
+// reports werr's wrap sites — not the panic. That is the correct answer for
+// the question it asks; the panic stack is one link deeper and reached above.
+func TestExtractStacktrace_onAWrappedPanicReportsWrapSites(t *testing.T) {
+	t.Parallel()
+
+	st := sentry.ExtractStacktrace(caughtPanic())
+	require.NotNil(t, st, "sentry must still discover StackTrace() on the werr wrapper")
+	require.Len(t, st.Frames, 1)
+	require.True(t, strings.HasSuffix(st.Frames[0].Function, "caughtPanic"),
+		"got %q", st.Frames[0].Function)
 }

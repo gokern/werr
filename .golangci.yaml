@@ -41,7 +41,8 @@ linters:
         main:
           allow:
             - $gostd
-            - github.com/gokern/werr
+            - github.com/gokern/panics # the module's only dependency
+            - github.com/gokern/werr/v2
             - github.com/stretchr/testify
     dogsled:
       # runtime.Caller returns four values; tests legitimately discard three.
