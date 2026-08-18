@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/gokern/werr"
+	"github.com/gokern/werr/v2"
 )
 
 // Pretty renders an error chain as a multi-line stack trace, regardless of

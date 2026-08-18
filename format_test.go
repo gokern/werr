@@ -2,10 +2,12 @@ package werr
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"testing"
 
+	"github.com/gokern/panics"
 	"github.com/stretchr/testify/require"
 )
 
@@ -342,4 +344,204 @@ func FuzzOneLine(f *testing.F) {
 		require.NotContains(t, out, "\r")
 		require.NotContains(t, out, "\t")
 	})
+}
+
+// The single render allocation must not grow with the depth of the checkout.
+// Both estimates used to reserve len(f.File) while the writers emit
+// path.Base(f.File), so identical output cost 2304 B/op from one tree and
+// 2688 B/op from another twenty characters deeper — and the numbers quoted in
+// CLAUDE.md were only reproducible on a path of the same length as the one
+// they were measured on.
+//
+// Not parallel: AllocsPerRun panics if it is.
+func TestFormatEstimates_doNotScaleWithCheckoutDepth(t *testing.T) {
+	const depth = 15
+
+	shallow := make([]Frame, depth)
+	deep := make([]Frame, depth)
+
+	for i := range shallow {
+		shallow[i] = Frame{
+			File:     "/w/service.go",
+			Line:     42,
+			FuncName: "github.com/gokern/werr/v2.Handle",
+			Msg:      "handling request",
+		}
+
+		deep[i] = shallow[i]
+		deep[i].File = "/home/runner/work/repo/repo/internal/service/service.go"
+	}
+
+	leaf := errors.New("leaf")
+	heading := shallow[0].Msg
+
+	require.Equal(t,
+		prettyEstimate(shallow, heading, "leaf", false),
+		prettyEstimate(deep, heading, "leaf", false),
+		"a deeper checkout must not enlarge the pretty reservation")
+	require.Equal(t,
+		oneLineEstimate(shallow, leaf),
+		oneLineEstimate(deep, leaf),
+		"nor the one-line reservation")
+
+	require.Equal(t, PrettyFormatter(shallow, leaf), PrettyFormatter(deep, leaf),
+		"the rendered output was identical all along; only the reservation moved")
+
+	// The estimate is still an upper bound, or the Builder reallocates and
+	// the one-allocation render quietly becomes two.
+	prettyAllocs := testing.AllocsPerRun(100, func() { _ = PrettyFormatter(deep, leaf) })
+	require.LessOrEqual(t, prettyAllocs, 1.0,
+		"pretty render must stay a single allocation on a deep path; got %.2f", prettyAllocs)
+
+	oneLineAllocs := testing.AllocsPerRun(100, func() { _ = OneLineFormatter(deep, leaf) })
+	require.LessOrEqual(t, oneLineAllocs, 1.0,
+		"one-line render must stay a single allocation on a deep path; got %.2f", oneLineAllocs)
+}
+
+//go:noinline
+func raisePanicForFormat() { panic("boom") }
+
+// caughtPanic is the shape werr receives: something else contained the panic,
+// and werr is handed the result to wrap.
+//
+//nolint:wrapcheck // the point is the raw *panics.Panic, unwrapped, as a producer hands it over.
+func caughtPanic() error { return panics.Catch(raisePanicForFormat) }
+
+func TestPrettyFormatter_expandsAPanicLeaf(t *testing.T) {
+	out := Pretty(Wrap(caughtPanic()))
+
+	require.Contains(t, out, "panic: boom", "the panic value heads the output")
+	require.Contains(t, out, "raisePanicForFormat",
+		"the panic site must be rendered, not just the catch site")
+	require.Contains(t, out, " --- at ",
+		"panic frames use the same shape as wrap frames")
+	require.NotContains(t, out, "\n\n",
+		"panic frames continue the one frame list; a blank line would re-announce "+
+			"the seam the shared shape exists to hide")
+}
+
+// The other half of writePanicFrames' lineOpen: when the outermost frame
+// carries a Msg, the leaf renders as a "Caused by:" tail that writePrettyFrame
+// never terminated, so the panic frames must supply the newline themselves.
+// Asserting the exact junction pins both branches — drop the newline and the
+// Contains fails, emit it unconditionally and the NotContains does.
+func TestPrettyFormatter_expandsAPanicLeafUnderAWrap(t *testing.T) {
+	out := Pretty(Wrapf(caughtPanic(), "handling request"))
+
+	require.Contains(t, out, "\nCaused by: panic: boom\n --- at ")
+	require.NotContains(t, out, "\n\n")
+}
+
+// The panic that reaches a formatter in production is rarely the bare leaf:
+// taskgroup joins them, and the idiom panics recommends is fmt.Errorf with a
+// sentinel. Matching the leaf by type covered neither, which is why both
+// formatters go through panics.As.
+func TestPrettyFormatter_findsAPanicBuriedInTheChain(t *testing.T) {
+	t.Parallel()
+
+	errSentinel := errors.New("delivery failed")
+
+	for name, leaf := range map[string]error{
+		"errors.Join":       errors.Join(caughtPanic()),
+		"errors.Join pair":  errors.Join(caughtPanic(), errors.New("other")),
+		"fmt.Errorf %w":     fmt.Errorf("task %q: %w", "sync", caughtPanic()),
+		"fmt.Errorf two %w": fmt.Errorf("%w: %w", errSentinel, caughtPanic()),
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			require.Contains(t, Pretty(Wrapf(leaf, "handling request")), "raisePanicForFormat",
+				"the panic site must survive a chain that buried the panic")
+		})
+	}
+}
+
+// A panic does not need a werr layer above it to be rendered. panics ships no
+// formatters and assigns rendering here, so if these two channels skip the
+// stack when no wrap frame is present, nothing in the pair prints it — and the
+// shapes below are the ones a panic actually arrives in, including the
+// fmt.Errorf idiom panics' own README recommends.
+func TestPrettyFormatter_expandsAPanicWithNoWrapFrames(t *testing.T) {
+	t.Parallel()
+
+	errSentinel := errors.New("delivery failed")
+
+	for name, err := range map[string]error{
+		"bare":              caughtPanic(),
+		"errors.Join":       errors.Join(caughtPanic()),
+		"errors.Join pair":  errors.Join(caughtPanic(), errors.New("other")),
+		"fmt.Errorf %w":     fmt.Errorf("task %q: %w", "sync", caughtPanic()),
+		"fmt.Errorf two %w": fmt.Errorf("%w: %w", errSentinel, caughtPanic()),
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			out := Pretty(err)
+
+			require.Contains(t, out, "panic: boom", "the leaf text still heads the output")
+			require.Contains(t, out, "raisePanicForFormat",
+				"an unwrapped panic must render its site; Pretty(p) and Pretty(Wrap(p)) "+
+					"cannot disagree on whether the stack is visible")
+			require.Contains(t, out, " --- at ",
+				"panic frames keep the shape they have under a wrap")
+			require.NotContains(t, out, "\n\n",
+				"the leaf line and the frame list are one block")
+		})
+	}
+}
+
+func TestOneLineFormatter_namesThePanicSiteWithNoWrapFrames(t *testing.T) {
+	t.Parallel()
+
+	out := OneLine(caughtPanic())
+
+	require.Contains(t, out, "panic: boom")
+	require.Contains(t, out, "panic at ")
+	require.Contains(t, out, "raisePanicForFormat")
+	require.Equal(t, 1, strings.Count(out, "panic at "), "still exactly one segment")
+
+	require.NotContains(t, out, "\n", "the single-line guarantee holds on this path too")
+	require.NotContains(t, out, "\r")
+	require.NotContains(t, out, "\t")
+}
+
+// The other half of the frameless branch: an ordinary error must come back
+// byte-identical and, for Pretty, without touching the Builder at all. This is
+// what the panics.As lookup is allowed to cost — one failed assertion, no
+// allocation, no formatting.
+// Not parallel: AllocsPerRun panics if it is.
+func TestFormatters_leafOnlyPathIsUnchangedForOrdinaryErrors(t *testing.T) {
+	leaf := errors.New("plain leaf")
+
+	require.Equal(t, "plain leaf", Pretty(leaf))
+	require.Equal(t, "plain leaf", OneLine(leaf))
+	require.Empty(t, Pretty(nil))
+	require.Empty(t, OneLine(nil))
+
+	require.Equal(t, "a b c", OneLine(errors.New("a\nb\tc")),
+		"flattening still applies with no frames above the leaf")
+
+	allocs := testing.AllocsPerRun(100, func() {
+		_ = Pretty(leaf)
+	})
+	require.Zero(t, allocs, "an ordinary error must not pay for the panic lookup")
+}
+
+// OneLine names the site and stops: a format whose contract is "one record is
+// one line" cannot carry a 60-frame stack.
+func TestOneLineFormatter_namesThePanicSiteOnly(t *testing.T) {
+	out := OneLine(Wrap(caughtPanic()))
+
+	require.Contains(t, out, "panic: boom")
+	require.Contains(t, out, "panic at ", "the segment must label itself as a site")
+	require.Contains(t, out, "raisePanicForFormat", "and name where the panic was raised")
+
+	require.NotContains(t, out, "runtime.goexit",
+		"only the panic site is emitted, never the rest of the goroutine stack")
+	require.Equal(t, 1, strings.Count(out, "panic at "),
+		"exactly one panic segment, however deep the stack")
+
+	require.NotContains(t, out, "\n", "the single-line guarantee is absolute")
+	require.NotContains(t, out, "\r")
+	require.NotContains(t, out, "\t")
 }

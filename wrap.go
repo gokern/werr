@@ -3,7 +3,7 @@ package werr
 import (
 	"fmt"
 
-	"github.com/gokern/werr/internal/pc"
+	"github.com/gokern/werr/v2/internal/pc"
 )
 
 // Wrap adds a werr layer to err, capturing the call site. Returns nil if

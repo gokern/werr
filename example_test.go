@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gokern/werr"
+	"github.com/gokern/werr/v2"
 )
 
 // Wrap captures the call site of every layer that touches the error and

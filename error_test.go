@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"unsafe"
 
 	"github.com/stretchr/testify/require"
 )
@@ -117,4 +118,21 @@ func TestErrorsAs_extractsErrorType(t *testing.T) {
 
 		require.NotErrorAs(t, errors.New("plain"), &w)
 	})
+}
+
+func TestError_structSizeIsPinned(t *testing.T) {
+	t.Parallel()
+
+	// pc(1 word) + err(2 words) + msg(2 words) = 5 words, and 1024 of them
+	// per arena slab: 40 bytes on a 64-bit target, 20 on a 32-bit one, which
+	// internal/pc's runtime.Callers fallback keeps supported. Expressed in
+	// words rather than pinned at 40 so the assertion holds on both.
+	//
+	// A panic stack must never become a field here: it would cost every
+	// error, and 99.99% of them are not panics. panics.Panic lives behind
+	// the err field instead.
+	const words = 5
+
+	require.Equal(t, unsafe.Sizeof(uintptr(0))*words, unsafe.Sizeof(Error{}),
+		"werr.Error must stay %d words wide", words)
 }

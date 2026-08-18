@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/gokern/werr/internal/pc"
+	"github.com/gokern/werr/v2/internal/pc"
 )
 
 // captureFromHelper routes the call through one //go:noinline frame.

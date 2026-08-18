@@ -10,6 +10,11 @@ package werr
 // cross fmt.Errorf or errors.Join lose everything past the boundary.
 // Frames with pc == 0 are dropped, not zero-padded.
 //
+// Callers reports only what werr captured itself. A recovered panic carries a
+// complete goroutine stack down to runtime.goexit, and the wrap sites are
+// frames from that same stack, so splicing the two would place code outside
+// goexit. Use panics.As(err).StackTrace() for the panic's own stack.
+//
 // Returns nil if err is nil or its outermost link is not a *Error.
 // Allocates one slice, sized to the surviving frames.
 //

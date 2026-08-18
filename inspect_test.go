@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/gokern/werr"
+	"github.com/gokern/werr/v2"
 )
 
 func TestIsWrap(t *testing.T) {

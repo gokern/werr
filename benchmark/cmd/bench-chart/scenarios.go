@@ -24,6 +24,11 @@ type Scenario struct {
 // overflows — oops used to blow out the other three and stopped doing so in
 // v1.23, so those cutoffs now sit unused above the data.
 //
+// The three time and byte cutoffs are absolute, so they have to be re-checked
+// whenever the Results are regenerated on different hardware: the same code on
+// a 2 GHz Xeon runs roughly 2x the ns/op of an M1, which eats headroom without
+// anything in the libraries changing.
+//
 //nolint:gochecknoglobals
 var scenarios = []Scenario{
 	{
@@ -32,7 +37,7 @@ var scenarios = []Scenario{
 		Pick:       func(s Sample) float64 { return s.NsPerOp },
 		Title:      "Realistic — full request lifecycle (time)",
 		Subtitle:   "ns/op (linear, lower is better) — werr highlighted",
-		Cutoff:     25_000, // 25 µs; nothing overflows today (slowest is oops at ~12 µs)
+		Cutoff:     25_000, // 25 µs; nothing overflows today (slowest is oops at ~20.8 µs)
 		Formatter:  TimeFormatter,
 		OverflowID: "ovf-time",
 	},
@@ -42,7 +47,7 @@ var scenarios = []Scenario{
 		Pick:       func(s Sample) float64 { return s.BytesPerOp },
 		Title:      "Realistic — memory per iteration",
 		Subtitle:   "B/op (linear, lower is better) — werr highlighted",
-		Cutoff:     20_000, // 20 KB; nothing overflows today (heaviest is mdobak at ~6.5 KB)
+		Cutoff:     20_000, // 20 KB; nothing overflows today (heaviest is oops at ~7.8 KB)
 		Formatter:  BytesFormatter,
 		OverflowID: "ovf-bytes",
 	},
@@ -52,7 +57,7 @@ var scenarios = []Scenario{
 		Pick:       func(s Sample) float64 { return s.NsPerOp },
 		Title:      "slog.JSONHandler — structured logging cost",
 		Subtitle:   "ns/op (linear, lower is better) — werr highlighted",
-		Cutoff:     20_000, // 20 µs; nothing overflows today (slowest is oops at ~9 µs)
+		Cutoff:     20_000, // 20 µs; nothing overflows today (slowest is oops at ~16.5 µs)
 		Formatter:  TimeFormatter,
 		OverflowID: "ovf-slog",
 	},

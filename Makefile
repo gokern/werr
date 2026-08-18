@@ -25,7 +25,7 @@ bench: ## Run werr microbenchmarks
 
 .PHONY: bench-full
 bench-full: ## Run cross-library comparison benchmarks and render SVG charts
-	cd benchmark && go test -bench '.' -benchtime 1s -cpu 1 -count 3 -run=XXX -benchmem ./... > RESULTS.txt 2>&1
+	cd benchmark && go test -bench '.' -benchtime 1s -cpu 1 -count 10 -run=XXX -benchmem -timeout 0 ./... > RESULTS.txt 2>&1
 	@echo "==> wrote benchmark/RESULTS.txt"
 	cd benchmark && go run ./cmd/bench-chart RESULTS.txt charts
 	@echo "==> wrote benchmark/charts/*.svg"

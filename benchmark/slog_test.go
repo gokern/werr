@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/gokern/werr"
+	"github.com/gokern/werr/v2"
 	"github.com/samber/oops"
 )
 

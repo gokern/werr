@@ -7,7 +7,7 @@ import (
 	"io"
 	"log/slog"
 
-	"github.com/gokern/werr"
+	"github.com/gokern/werr/v2"
 )
 
 // Error implements [slog.LogValuer], so the standard logger emits werr

@@ -11,7 +11,7 @@ import (
 	emperror "emperror.dev/errors"
 	cockroach "github.com/cockroachdb/errors"
 	goerrors "github.com/go-errors/errors"
-	"github.com/gokern/werr"
+	"github.com/gokern/werr/v2"
 	"github.com/joomcode/errorx"
 	mdobak "github.com/mdobak/go-xerrors"
 	"github.com/palantir/stacktrace"
