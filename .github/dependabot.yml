@@ -9,15 +9,20 @@ updates:
       go-modules:
         patterns: ["*"]
 
-  - package-ecosystem: gomod
-    directory: /benchmark
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
-    groups:
-      go-modules:
-        patterns: ["*"]
-
+  # /benchmark is left out on purpose. It is a comparison harness pinning
+  # fifteen competing error libraries, it ships nothing, nobody imports it,
+  # and govulncheck runs at the root only, so those versions were never
+  # scanned here in the first place. What a bump there does cost is the
+  # recorded run: RESULTS.txt, the four charts built from it, and every number
+  # BENCHMARK.md quotes all describe one fixed dependency set, and none of
+  # them come back without `make bench-full` on a quiet machine. Move that set
+  # deliberately, with the re-measurement, rather than one grouped pull
+  # request at a time.
+  #
+  # /interop/sentry stays for the opposite reason. Its whole job is to notice
+  # when sentry-go changes the duck-typed StackTrace() protocol it finds by
+  # reflection, which no compiler checks. A bump that turns that module red is
+  # the warning the module exists to produce.
   - package-ecosystem: gomod
     directory: /interop/sentry
     schedule:
