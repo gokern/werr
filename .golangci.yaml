@@ -13,7 +13,12 @@ formatters:
       sections:
         - standard
         - default
-        - localmodule
+        # An explicit prefix rather than localmodule: run from the root,
+        # localmodule treats github.com/gokern/werr/v2 as this module's own,
+        # but run inside interop/sentry — a module of its own — the same
+        # import is third-party, and the two runs rewrite each other's import
+        # blocks. Named outright, both runs agree.
+        - prefix(github.com/gokern/werr)
     gofmt:
       rewrite-rules:
         - pattern: "interface{}"
@@ -39,12 +44,28 @@ linters:
   settings:
     depguard:
       rules:
+        # The root module; interop/sentry has a rule of its own below.
         main:
+          files:
+            - "!**/interop/sentry/**"
           allow:
             - $gostd
             - github.com/gokern/panics # the module's only dependency
             - github.com/gokern/werr/v2
             - github.com/stretchr/testify
+        # interop/sentry is a module of its own that exists to run the
+        # sentry-go integration tests; its dependencies never reach the root
+        # go.mod. The root .golangci.yaml still governs it, because
+        # golangci-lint finds the config by searching upwards.
+        sentry:
+          files:
+            - "**/interop/sentry/**"
+          allow:
+            - $gostd
+            - github.com/getsentry/sentry-go # the module exists to test against it
+            - github.com/gokern/panics # the shared recovered-panic type, for the panic-path tests
+            - github.com/gokern/werr/v2 # the module under test, via the local replace
+            - github.com/stretchr/testify # assertions, test-only
     dogsled:
       # runtime.Caller returns four values; tests legitimately discard three.
       max-blank-identifiers: 3
@@ -76,8 +97,19 @@ linters:
         - a arena.box
         - f werr.Frame
         - f Frame
+        - f sentry.Frame
+        - st *sentry.Stacktrace
   exclusions:
     rules:
+      # The nested module has to build against the working tree, or a change
+      # here could not be compiled with the root change it depends on.
+      # Consumers ignore a dependency's replace directives, so it costs an
+      # importer nothing.
+      - path: interop/sentry/
+        linters:
+          - gomoddirectives
+        text: "local replacement"
+
       - path: _test\.go
         linters:
           - exhaustruct_v5

@@ -15,8 +15,16 @@ concurrency:
 
 jobs:
   golangci:
-    name: golangci-lint
+    name: golangci-lint (${{ matrix.module }})
     runs-on: ubuntu-latest
+    # One entry per module: golangci-lint stops at a module boundary, so a run
+    # at the root never opens interop/sentry. Both entries are held to one
+    # policy anyway, because golangci-lint finds the root .golangci.yaml by
+    # searching upwards from the module directory.
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [".", "interop/sentry"]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -35,6 +43,7 @@ jobs:
           # linter deprecation under `default: all`). Bump this on purpose,
           # together with any config/code changes the new version demands.
           version: v2.13.2
+          working-directory: ${{ matrix.module }}
 
   tidy:
     name: go mod tidy

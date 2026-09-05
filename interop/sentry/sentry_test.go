@@ -86,6 +86,7 @@ func TestExtractStacktrace_frameCountMatchesChainDepth(t *testing.T) {
 
 	t.Run("depth 1", func(t *testing.T) {
 		t.Parallel()
+
 		err := werr.Wrap(io.EOF)
 		st := sentry.ExtractStacktrace(err)
 		require.NotNil(t, st)
@@ -94,6 +95,7 @@ func TestExtractStacktrace_frameCountMatchesChainDepth(t *testing.T) {
 
 	t.Run("depth 3", func(t *testing.T) {
 		t.Parallel()
+
 		err := makeOuter(io.EOF)
 		st := sentry.ExtractStacktrace(err)
 		require.NotNil(t, st)
@@ -102,6 +104,7 @@ func TestExtractStacktrace_frameCountMatchesChainDepth(t *testing.T) {
 
 	t.Run("depth 8 with distinct PCs", func(t *testing.T) {
 		t.Parallel()
+
 		err := makeD8(errors.New("leaf"))
 
 		st := sentry.ExtractStacktrace(err)
@@ -137,7 +140,8 @@ func TestExtractStacktrace_orderMatchesSentryConvention(t *testing.T) {
 	require.Len(t, st.Frames, 3)
 
 	require.True(t, strings.HasSuffix(st.Frames[0].Function, "makeOuter"),
-		"Frames[0] must be the outermost wrap (most recent call, post-flip first); got %q", st.Frames[0].Function)
+		"Frames[0] must be the outermost wrap (most recent call, post-flip first); got %q",
+		st.Frames[0].Function)
 	require.True(t, strings.HasSuffix(st.Frames[1].Function, "makeMiddle"),
 		"got %q", st.Frames[1].Function)
 	require.True(t, strings.HasSuffix(st.Frames[2].Function, "makeInner"),
@@ -190,7 +194,8 @@ func TestExtractStacktrace_throughFmtErrorf(t *testing.T) {
 
 	st := sentry.ExtractStacktrace(outer)
 	require.NotNil(t, st)
-	require.Len(t, st.Frames, 1, "Callers stops at fmt.Errorf, so only the outer werr-frame survives")
+	require.Len(t, st.Frames, 1,
+		"Callers stops at fmt.Errorf, so only the outer werr-frame survives")
 }
 
 func TestExtractStacktrace_outerNotWerrYieldsNil(t *testing.T) {
@@ -221,6 +226,7 @@ func TestExtractStacktrace_jsonRoundTrip(t *testing.T) {
 	require.NoError(t, json.Unmarshal(raw, &roundTripped))
 
 	require.Len(t, roundTripped.Frames, len(original.Frames))
+
 	for i := range original.Frames {
 		require.Equal(t, original.Frames[i].Function, roundTripped.Frames[i].Function)
 		require.Equal(t, original.Frames[i].Lineno, roundTripped.Frames[i].Lineno)
