@@ -161,7 +161,7 @@ func writePanicFrames(sb *strings.Builder, stack []uintptr) {
 	for {
 		resolved, more := frames.Next()
 
-		writePrettyFrame(sb, Frame{ //nolint:exhaustruct // Msg has no meaning for a panic frame.
+		writePrettyFrame(sb, Frame{ //nolint:exhaustruct_v5 // Msg has no meaning for a panic frame.
 			File:     resolved.File,
 			Line:     resolved.Line,
 			FuncName: resolved.Function,

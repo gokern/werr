@@ -18,7 +18,7 @@ type Frame struct {
 // allocate. Returns a zero-valued Frame (with Msg populated) if the PC could
 // not be resolved.
 func frameOf(err *Error) Frame {
-	frame := Frame{Msg: err.msg} //nolint:exhaustruct
+	frame := Frame{Msg: err.msg} //nolint:exhaustruct_v5
 	if err.pc == 0 {
 		return frame
 	}
