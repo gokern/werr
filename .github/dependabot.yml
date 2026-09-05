@@ -1,14 +1,13 @@
 version: 2
 updates:
-  - package-ecosystem: gomod
-    directory: /
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
-    groups:
-      go-modules:
-        patterns: ["*"]
-
+  # / and /interop/sentry in one entry. interop/sentry replaces the root with
+  # `../..`, so a bump in the root go.mod changes what its go.sum has to hold,
+  # and a pull request that touches one directory leaves the other untidy and
+  # its CI red (#9 was the first). One grouped update bumps and tidies both
+  # directories in the same pull request. That holds as long as interop/sentry
+  # keeps requiring every dependency it shares with the root directly, as its
+  # go.mod does today with panics and testify.
+  #
   # /benchmark is left out on purpose. It is a comparison harness pinning
   # fifteen competing error libraries, it ships nothing, nobody imports it,
   # and govulncheck runs at the root only, so those versions were never
@@ -17,14 +16,17 @@ updates:
   # BENCHMARK.md quotes all describe one fixed dependency set, and none of
   # them come back without `make bench-full` on a quiet machine. Move that set
   # deliberately, with the re-measurement, rather than one grouped pull
-  # request at a time.
+  # request at a time. The price is the `go mod tidy (benchmark)` job:
+  # benchmark replaces the root with `../` and takes the root's own dependency
+  # versions from it, so a root bump leaves benchmark untidy and that job red
+  # until someone runs tidy there by hand, as before.
   #
   # /interop/sentry stays for the opposite reason. Its whole job is to notice
   # when sentry-go changes the duck-typed StackTrace() protocol it finds by
   # reflection, which no compiler checks. A bump that turns that module red is
   # the warning the module exists to produce.
   - package-ecosystem: gomod
-    directory: /interop/sentry
+    directories: ["/", "/interop/sentry"]
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
