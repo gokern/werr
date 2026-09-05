@@ -27,6 +27,7 @@ linters:
   disable:
     - wsl # Deprecated, replaced by wsl_v5.
     - gomodguard # Deprecated, replaced by gomodguard_v2.
+    - exhaustruct # Deprecated, replaced by exhaustruct_v5.
     - err113
     # White-box tests are intentional (see CLAUDE.md "Test layout"): black-box
     # tests live in *_test.go with package werr_test, white-box tests share the
@@ -79,7 +80,7 @@ linters:
     rules:
       - path: _test\.go
         linters:
-          - exhaustruct
+          - exhaustruct_v5
           - funlen          # table-driven tests legitimately grow large
           - forcetypeassert # tests know the concrete shape they constructed
           - gosec           # G602 etc. — tests deliberately panic / index OOB
