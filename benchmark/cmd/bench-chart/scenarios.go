@@ -5,9 +5,9 @@ package main
 // dispatch loop in run() iterates a slice of these so adding a new chart is
 // one entry, not a new branch in main.
 type Scenario struct {
-	File       string                  // output filename in outDir
-	Scenario   string                  // sample.Scenario key
-	Pick       func(Sample) float64    // metric extractor
+	File       string               // output filename in outDir
+	Scenario   string               // sample.Scenario key
+	Pick       func(Sample) float64 // metric extractor
 	Title      string
 	Subtitle   string
 	Cutoff     float64

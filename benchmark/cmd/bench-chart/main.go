@@ -1,5 +1,5 @@
 // Command bench-chart reads a `go test -bench` RESULTS.txt and writes SVG bar
-// charts into the output directory. Used by `make bench-charts` to refresh
+// charts into the output directory. Used by `mise run bench-full` to refresh
 // BENCHMARK.md visuals.
 //
 // Usage: bench-chart <results.txt> <outdir>

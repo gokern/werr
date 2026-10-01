@@ -252,10 +252,10 @@ func TestWrap_callSites(t *testing.T) {
 	// frame. Coverage instrumentation amplifies the same issue. -race
 	// disables the optimization paths that cause this, so the regression
 	// gate stays accurate under CI's `-race -covermode=atomic` and under
-	// `make test`. Skip elsewhere so plain `go test` and `go test -cover`
+	// `mise run test`. Skip elsewhere so plain `go test` and `go test -cover`
 	// stay green for downstream users.
 	if !raceEnabled {
-		t.Skip("PC-line regression gate requires -race; see `make test` or CI")
+		t.Skip("PC-line regression gate requires -race; see `mise run test` or CI")
 	}
 
 	markers := scanTraceMarkers(t)

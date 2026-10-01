@@ -10,10 +10,11 @@ import "runtime"
 // (pc_unsafe.go + pc_<arch>.s) is used on amd64 and arm64 when the
 // werrsafe build tag is not set.
 //
-//go:noinline keeps the skip count below correct: if Caller were inlined
 // into werr.Wrap, runtime.Callers(3, …) would skip one frame too many
 // and capture the user's caller instead of the user. The asm path is
 // structurally non-inlinable, so this matters only on the safe path.
+//
+//go:noinline keeps the skip count below correct: if Caller were inlined
 func Caller() uintptr {
 	// Skip 3: runtime.Callers, pc.Caller, pc.Caller's caller (e.g. werr.Wrap).
 	// Frame 3 is the user code we want to attribute the wrap to.

@@ -11,7 +11,6 @@ import (
 	emperror "emperror.dev/errors"
 	cockroach "github.com/cockroachdb/errors"
 	goerrors "github.com/go-errors/errors"
-	"github.com/gokern/werr/v2"
 	"github.com/joomcode/errorx"
 	mdobak "github.com/mdobak/go-xerrors"
 	"github.com/palantir/stacktrace"
@@ -20,8 +19,10 @@ import (
 	werrold "github.com/safeblock-dev/werr"
 	"github.com/samber/oops"
 	"github.com/ztrue/tracerr"
-	xerrors "golang.org/x/xerrors"
 	tozd "gitlab.com/tozd/go/errors"
+	xerrors "golang.org/x/xerrors"
+
+	"github.com/gokern/werr/v2"
 )
 
 // Footprint measures the steady-state memory cost of one error: not the
@@ -153,4 +154,3 @@ func BenchmarkFootprint_mdobak(b *testing.B) {
 func BenchmarkFootprint_tracerr(b *testing.B) {
 	runFootprint(b, func() error { return tracerr.Wrap(footprintLeaf) })
 }
-

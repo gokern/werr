@@ -1,0 +1,112 @@
+# werr — local development tooling.
+#
+# Three modules live here: the root, benchmark/ (cross-library comparisons,
+# deliberately outside Dependabot), and interop/sentry (SDK contract tests).
+# Every Go tool stops at a module boundary, so the multi-module tasks below
+# loop rather than relying on ./... to descend. It does not.
+#
+# The Go version is deliberately not pinned here: go.mod already declares the
+# minimum supported version and CI reads it. Bump [tools] by hand — Dependabot
+# does not read this file.
+
+[tools]
+golangci-lint = "2.14.0"
+"go:golang.org/x/vuln/cmd/govulncheck" = "1.8.0"
+
+[tasks.test]
+description = "Run the tests with the race detector and coverage"
+# Shuffled on purpose: many tests here mutate global state and run
+# sequentially, so a fixed order is one arrangement of that, not a statement
+# about any other.
+run = "go test -race -shuffle=on -covermode=atomic -coverprofile=coverage.out ./..."
+
+[tasks.bench]
+description = "Run werr microbenchmarks"
+run = "go test ./... -bench . -benchtime 1s -timeout 0 -run=XXX -cpu 1 -benchmem"
+
+[tasks.bench-full]
+description = "Run cross-library comparison benchmarks and render SVG charts"
+dir = "benchmark"
+run = [
+  "go test -bench '.' -benchtime 1s -cpu 1 -count 10 -run=XXX -benchmem -timeout 0 ./... > RESULTS.txt 2>&1",
+  "go run ./cmd/bench-chart RESULTS.txt charts",
+]
+
+# golangci-lint stops at a module boundary, so interop/sentry gets its own
+# pass. benchmark/ stays unlinted on purpose. Both runs share the root
+# .golangci.yaml, which golangci-lint finds by searching upwards.
+[tasks.lint]
+description = "Run golangci-lint over the root and interop/sentry (benchmark stays unlinted)"
+run = [
+  "golangci-lint run ./...",
+  "cd interop/sentry && golangci-lint run ./...",
+]
+
+[tasks.fmt]
+description = "Apply the formatters configured in .golangci.yaml, in the linted modules"
+run = [
+  "golangci-lint fmt ./...",
+  "cd interop/sentry && golangci-lint fmt ./...",
+]
+
+[tasks.tidy]
+description = "Check every go.mod is tidy (root, benchmark, interop/sentry)"
+# -diff is non-mutating and independent of the commit state: it exits
+# non-zero exactly when a tidy would change something.
+run = [
+  "go mod tidy -diff",
+  "cd benchmark && go mod tidy -diff",
+  "cd interop/sentry && go mod tidy -diff",
+]
+
+# The asm PC-capture path is exercised by the default test run; this forces
+# the runtime.Callers fallback in internal/pc and keeps it equivalent.
+[tasks.test-werrsafe]
+description = "Run the tests with the werrsafe fallback tag"
+run = "go test -race -tags werrsafe ./..."
+
+# interop/sentry pins sentry-go and replaces the root with the working tree,
+# so the duck-typed StackTrace() contract is checked here, not in the root.
+[tasks.test-interop]
+description = "Build, vet and test the interop/sentry module"
+dir = "interop/sentry"
+run = [
+  "go build ./...",
+  "go vet ./...",
+  "go test -race ./...",
+]
+
+[tasks.demo]
+description = "Run the example demo as a smoke test"
+run = "go run ./_examples/demo > /dev/null"
+
+# CI runners are too noisy for the numbers, but the module must still compile.
+[tasks.benchmark-build]
+description = "Compile and vet the benchmark module"
+dir = "benchmark"
+run = [
+  "go build ./...",
+  "go vet ./...",
+]
+
+# Active exploration; the saved corpus replays as ordinary test cases in the
+# regular test run, so this only hunts for inputs nobody has seen yet.
+[tasks.fuzz]
+description = "Fuzz each target for 30s"
+run = [
+  "go test -run=^$ -fuzz=^FuzzPretty$ -fuzztime=30s .",
+  "go test -run=^$ -fuzz=^FuzzOneLine$ -fuzztime=30s .",
+  "go test -run=^$ -fuzz=^FuzzSplit$ -fuzztime=30s ./internal/funcname",
+]
+
+[tasks.vuln]
+description = "Scan the root module for known vulnerabilities"
+run = "govulncheck ./..."
+
+[tasks.check]
+description = "Everything CI runs before merge"
+# Sequential, not `depends`: mise runs dependencies in parallel, and a
+# suite that asserts on real elapsed time should not compete with lint and
+# govulncheck for the CPU. tidy runs before test so an untidy module fails
+# fast instead of after the slowest check.
+run = "mise run lint && mise run tidy && mise run test && mise run test-werrsafe && mise run test-interop && mise run demo && mise run benchmark-build && mise run fuzz && mise run vuln"

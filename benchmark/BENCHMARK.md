@@ -127,7 +127,7 @@ The full suite is light enough to reproduce on a developer laptop. From
 the repo root:
 
 ```sh
-make bench-full       # writes benchmark/RESULTS.txt and regenerates
+mise run bench-full   # writes benchmark/RESULTS.txt and regenerates
                       # benchmark/charts/*.svg from it
 ```
 
@@ -188,7 +188,7 @@ exactly the libraries this suite exists to compare. The full run takes
 
 The competing libraries are ordinary module dependencies, so a
 dependency bump moves the numbers below without touching a line of
-bench code. Treat `make bench-full` plus a refresh of the Results
+bench code. Treat `mise run bench-full` plus a refresh of the Results
 tables as part of merging any `benchmark/go.mod` update.
 
 ## Caveats
@@ -261,7 +261,7 @@ directly.
 
 ## Results
 
-Snapshot of medians from one `make bench-full` run (`-benchtime 1s
+Snapshot of medians from one `mise run bench-full` run (`-benchtime 1s
 -cpu 1 -count 10`) on the environment above. Absolute times are ~2x the
 figures an M1 produces; the ranking is what travels between machines.
 

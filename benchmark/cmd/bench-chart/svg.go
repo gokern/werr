@@ -69,12 +69,15 @@ func (s *svgBuilder) close() string {
 // used to fill capped bars. The id must be unique across charts that may
 // share a host page.
 func (s *svgBuilder) defOverflowPattern(id string) {
-	fmt.Fprintf(&s.b,
+	fmt.Fprintf(
+		&s.b,
 		`<defs><pattern id="%s" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">`+
 			`<rect width="8" height="8" fill="%s"/>`+
 			`<line x1="0" y1="0" x2="0" y2="8" stroke="%s" stroke-width="3"/>`+
 			`</pattern></defs>`,
-		id, overflowFill, overflowStripe,
+		id,
+		overflowFill,
+		overflowStripe,
 	)
 }
 
@@ -93,7 +96,14 @@ func (s *svgBuilder) subtitle(text string) {
 }
 
 // inScopeBar draws one bar that fits within the linear scale.
-func (s *svgBuilder) inScopeBar(row int, it Bar, maxIn float64, highlight string, f Formatter, unit string) {
+func (s *svgBuilder) inScopeBar(
+	row int,
+	it Bar,
+	maxIn float64,
+	highlight string,
+	f Formatter,
+	unit string,
+) {
 	y := plotTop + row*rowH
 	cy := y + rowH/2
 	barLen := (it.Value/maxIn)*float64(barAreaW) + 2
@@ -121,20 +131,35 @@ func (s *svgBuilder) inScopeBar(row int, it Bar, maxIn float64, highlight string
 // section.
 func (s *svgBuilder) divider(inScopeCount int) {
 	y := plotTop + inScopeCount*rowH + dividerH/2
-	fmt.Fprintf(&s.b,
+	fmt.Fprintf(
+		&s.b,
 		`<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="%s" stroke-width="1" stroke-dasharray="4 4"/>`,
-		labelW, y, chartW-16, y, dividerStroke,
+		labelW,
+		y,
+		chartW-16,
+		y,
+		dividerStroke,
 	)
-	fmt.Fprintf(&s.b,
+	fmt.Fprintf(
+		&s.b,
 		`<text x="%d" y="%d" text-anchor="end" font-size="11" fill="%s" dominant-baseline="middle">off-scale ↓</text>`,
-		labelW-10, y, dividerLabel,
+		labelW-10,
+		y,
+		dividerLabel,
 	)
 }
 
 // overflowBar draws one capped bar in the off-scale section. The label
 // shows both the cutoff and the actual value, so the reader sees "this
 // bar is at least X" plus the real number.
-func (s *svgBuilder) overflowBar(row, inScopeCount int, it Bar, cutoff float64, overflowID string, f Formatter, chartUnit string) {
+func (s *svgBuilder) overflowBar(
+	row, inScopeCount int,
+	it Bar,
+	cutoff float64,
+	overflowID string,
+	f Formatter,
+	chartUnit string,
+) {
 	y := plotTop + (inScopeCount+row)*rowH + dividerH
 	cy := y + rowH/2
 	barLen := float64(barAreaW)
