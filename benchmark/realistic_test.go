@@ -10,7 +10,6 @@ import (
 	cockroach "github.com/cockroachdb/errors"
 	goerrors "github.com/go-errors/errors"
 	goplay "github.com/go-playground/errors/v5"
-	"github.com/gokern/werr/v2"
 	"github.com/joomcode/errorx"
 	mdobak "github.com/mdobak/go-xerrors"
 	"github.com/palantir/stacktrace"
@@ -20,6 +19,8 @@ import (
 	"github.com/samber/oops"
 	tozd "gitlab.com/tozd/go/errors"
 	xerrors "golang.org/x/xerrors"
+
+	"github.com/gokern/werr/v2"
 )
 
 // Realistic benchmark model.

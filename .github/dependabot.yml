@@ -14,7 +14,7 @@ updates:
   # scanned here in the first place. What a bump there does cost is the
   # recorded run: RESULTS.txt, the four charts built from it, and every number
   # BENCHMARK.md quotes all describe one fixed dependency set, and none of
-  # them come back without `make bench-full` on a quiet machine. Move that set
+  # them come back without `mise run bench-full` on a quiet machine. Move that set
   # deliberately, with the re-measurement, rather than one grouped pull
   # request at a time. The price is the `go mod tidy (benchmark)` job:
   # benchmark replaces the root with `../` and takes the root's own dependency

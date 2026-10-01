@@ -35,12 +35,12 @@ func TestRender_inScopeAndOverflow(t *testing.T) {
 		`>fast<`,
 		`>werr<`,
 		`>slow<`,
-		highlightColor,    // applied to the werr bar
-		defaultBarColor,   // applied to the fast bar
-		`url(#ovf-test)`,  // overflow bar uses the pattern
-		`off-scale ↓`,     // divider label is present
-		`> 1000 ns`,  // cutoff is shown in the chart's in-scope unit
-		`(50.0 µs)`,  // actual overflow value uses its own most-readable unit
+		highlightColor,   // applied to the werr bar
+		defaultBarColor,  // applied to the fast bar
+		`url(#ovf-test)`, // overflow bar uses the pattern
+		`off-scale ↓`,    // divider label is present
+		`> 1000 ns`,      // cutoff is shown in the chart's in-scope unit
+		`(50.0 µs)`,      // actual overflow value uses its own most-readable unit
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in output", want)

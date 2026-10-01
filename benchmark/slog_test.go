@@ -7,8 +7,9 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/gokern/werr/v2"
 	"github.com/samber/oops"
+
+	"github.com/gokern/werr/v2"
 )
 
 // BenchmarkSlogJSON measures the cost of feeding a wrapped error to a
@@ -68,4 +69,3 @@ func BenchmarkSlogJSON_oops(b *testing.B) {
 		logger.LogAttrs(ctx, slog.LevelError, "request failed", slog.Any("err", err))
 	}
 }
-
