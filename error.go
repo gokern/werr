@@ -29,7 +29,7 @@ func newError(err error, msg string, pc uintptr) error {
 	e.err = err
 	e.msg = msg
 
-	return e
+	return e //nolint:wrapcheck // The arena allocates this package's wrapper; err is already wrapped.
 }
 
 // Error renders the chain using the formatter installed via [SetFormatter]
